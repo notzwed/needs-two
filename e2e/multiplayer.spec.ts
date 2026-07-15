@@ -23,6 +23,18 @@ test("two browsers share an authoritative game and the layout stays responsive",
 
   await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 5_000 });
   await expect(second.locator(".puzzle-board")).toBeVisible({ timeout: 5_000 });
+  const referenceButton = first.getByRole("button", { name: "Ingrandisci l'immagine di riferimento" });
+  await expect(referenceButton).toBeVisible();
+  await expect(first.locator(".reference-thumbnail img")).toHaveJSProperty("complete", true);
+  const thumbnailBox = await referenceButton.boundingBox();
+  await referenceButton.click();
+  const referenceDialog = first.getByRole("dialog", { name: "Immagine di riferimento ingrandita" });
+  await expect(referenceDialog).toBeVisible();
+  await expect(referenceDialog.locator("img")).toBeVisible();
+  const zoomedBox = await referenceDialog.locator("img").boundingBox();
+  expect(zoomedBox!.width).toBeGreaterThan(thumbnailBox!.width * 2);
+  await first.keyboard.press("Escape");
+  await expect(referenceDialog).toBeHidden();
   await expect(first.locator(".turn-pill")).toBeHidden();
   await expect(first.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(second.locator(".turn-label")).toHaveText("Turno del tuo amico");

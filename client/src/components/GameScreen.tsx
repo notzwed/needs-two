@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PlayerNumber, RoomState } from "@needs-two/shared";
 import { CompletionModal } from "./CompletionModal";
 import { PuzzleBoard } from "./PuzzleBoard";
+import { PuzzleReference } from "./PuzzleReference";
 import { TurnHeader } from "./TurnHeader";
 import { useSound } from "../hooks/useSound";
 
@@ -70,7 +71,10 @@ export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHo
         </button>
       </div>
       <TurnHeader game={room.game} playerNumber={playerNumber} serverOffset={room.serverTime - Date.now()} />
-      <PuzzleBoard game={room.game} canMove={canMove} isWatching={isWatching} onMove={move} onWait={waitNotice} />
+      <div className="game-stage">
+        <PuzzleBoard game={room.game} canMove={canMove} isWatching={isWatching} onMove={move} onWait={waitNotice} />
+        <PuzzleReference puzzleId={room.game.puzzleId} />
+      </div>
       <div className="game-meta">
         <span>Tu: Player {playerNumber}</span><span>{room.game.moveCount} mosse</span><span>Stanza {room.code}</span>
       </div>
