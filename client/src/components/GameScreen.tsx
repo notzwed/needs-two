@@ -1,4 +1,3 @@
-import { Home, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerNumber, RoomState } from "@needs-two/shared";
 import { CompletionModal } from "./CompletionModal";
@@ -20,6 +19,8 @@ interface GameScreenProps {
 }
 
 export function GameScreen({ room, sessionId, connected, nightMode, onToggleTheme, onMove, onRematch, onHome }: GameScreenProps) {
+  const homeButtonImage = `${import.meta.env.BASE_URL}branding/home-button.png`;
+  const volumeButtonImage = `${import.meta.env.BASE_URL}branding/volume-button.png`;
   const player = room.players.find((candidate) => candidate.id === sessionId);
   const playerNumber = (player?.number ?? 1) as PlayerNumber;
   const canMove = connected && room.game.phase === "playing" && room.game.activePlayer === playerNumber;
@@ -67,12 +68,14 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
   return (
     <main className={`game-screen ${isWatching ? "is-watching" : "is-playing"}`}>
       <div className="game-topbar">
-        <button className="icon-button" onClick={onHome} aria-label="Torna alla home"><Home size={20} /></button>
+        <button className="art-button home-art-button" onClick={onHome} aria-label="Torna alla home">
+          <img src={homeButtonImage} alt="" aria-hidden="true" />
+        </button>
         <span className="mini-brand">Needs Two</span>
         <div className="game-topbar-actions">
           <ThemeToggle nightMode={nightMode} onToggle={onToggleTheme} />
-          <button className="icon-button" onClick={toggle} aria-label={enabled ? "Disattiva audio" : "Attiva audio"} title={enabled ? "Disattiva audio" : "Attiva audio"}>
-            {enabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          <button className={`art-button volume-art-button ${enabled ? "" : "is-muted"}`} onClick={toggle} aria-label={enabled ? "Disattiva audio" : "Attiva audio"} title={enabled ? "Disattiva audio" : "Attiva audio"}>
+            <img src={volumeButtonImage} alt="" aria-hidden="true" />
           </button>
         </div>
       </div>

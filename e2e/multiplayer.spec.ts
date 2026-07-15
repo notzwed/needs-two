@@ -7,7 +7,21 @@ test("two browsers share an authoritative game and the layout stays responsive",
   const second = await secondContext.newPage();
 
   await first.goto("./");
-  await expect(first.getByRole("heading", { name: "Needs Two" })).toBeVisible();
+  await expect(first.getByRole("heading", { name: "Needs Two" })).toBeAttached();
+  const homeLogo = first.locator(".home-logo");
+  await expect(homeLogo).toBeVisible();
+  await expect(homeLogo).toHaveCSS("animation-name", "logo-drop");
+  await expect(homeLogo).toHaveJSProperty("complete", true);
+  expect(await homeLogo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  const logoCornerAlpha = await homeLogo.evaluate((image: HTMLImageElement) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(image, 0, 0);
+    return context.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(logoCornerAlpha).toBe(0);
   await first.getByRole("button", { name: "Passa alla modalità notte" }).click();
   await expect(first.locator("html")).toHaveAttribute("data-theme", "night");
   await expect(first.locator(".home-screen")).toHaveCSS("background-color", "rgb(23, 25, 22)");
@@ -42,7 +56,12 @@ test("two browsers share an authoritative game and the layout stays responsive",
   expect(zoomedBox!.width).toBeGreaterThan(thumbnailBox!.width * 2);
   await first.keyboard.press("Escape");
   await expect(referenceDialog).toBeHidden();
+  const homeArtButton = first.getByRole("button", { name: "Torna alla home" });
   const audioButton = first.getByRole("button", { name: "Disattiva audio" });
+  await expect(homeArtButton.locator("img")).toHaveJSProperty("complete", true);
+  await expect(audioButton.locator("img")).toHaveJSProperty("complete", true);
+  expect(await homeArtButton.locator("img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  expect(await audioButton.locator("img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   await audioButton.click();
   await expect(first.getByRole("button", { name: "Attiva audio" })).toBeVisible();
   await first.getByRole("button", { name: "Attiva audio" }).click();
@@ -82,6 +101,15 @@ test("two browsers share an authoritative game and the layout stays responsive",
   const hasHorizontalOverflow = await second.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
   await expect(second.locator(".puzzle-board")).toBeInViewport();
+  const topbarOverlaps = await second.evaluate(() => {
+    const elements = [...document.querySelectorAll<HTMLElement>(".home-art-button, .mini-brand, .game-topbar-actions")]
+      .filter((element) => getComputedStyle(element).display !== "none")
+      .map((element) => element.getBoundingClientRect());
+    return elements.some((box, index) => elements.slice(index + 1).some((other) =>
+      box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top,
+    ));
+  });
+  expect(topbarOverlaps).toBe(false);
   await second.screenshot({ path: "artifacts/game-mobile.png", fullPage: true });
 
   const firstTiles = await first.locator(".puzzle-tile").evaluateAll((tiles) =>
