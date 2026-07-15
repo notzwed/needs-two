@@ -94,4 +94,4 @@ needs-two/
 
 ## Pubblicazione
 
-Il comando `npm run deploy:pages` pubblica il client sul ramo `gh-pages`. Il multiplayer richiede anche il server Node persistente: `render.yaml` contiene una configurazione pronta per Render. Dopo il deploy del server, imposta nel repository GitHub la variabile Actions `VITE_SERVER_URL` con l'URL HTTPS del servizio e rilancia il workflow Pages.
+Il comando `npm run deploy:pages` pubblica il client sul ramo `gh-pages`. Il multiplayer richiede anche il server Node persistente: `render.yaml` contiene una configurazione pronta per Render. Dopo il deploy del server, imposta `VITE_SERVER_URL` con l'URL HTTPS del servizio ed esegui di nuovo `npm run deploy:pages`.
