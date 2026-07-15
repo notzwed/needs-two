@@ -33,7 +33,7 @@ export function PuzzleBoard({ game, canMove, isWatching, onMove, onWait }: Puzzl
     if (inputLocked || !movable.has(tileId)) return;
     setInputLocked(true);
     await onMove(tileId);
-    window.setTimeout(() => setInputLocked(false), 225);
+    window.setTimeout(() => setInputLocked(false), 310);
   }
 
   return (

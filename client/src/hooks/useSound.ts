@@ -16,35 +16,57 @@ function playTone(context: AudioContext, frequency: number, start: number, durat
   oscillator.stop(start + duration);
 }
 
-function playSoftSlide(context: AudioContext) {
-  const start = context.currentTime;
-  const duration = 0.11;
-  const oscillator = context.createOscillator();
-  const oscillatorGain = context.createGain();
-  oscillator.type = "triangle";
-  oscillator.frequency.setValueAtTime(165, start);
-  oscillator.frequency.exponentialRampToValueAtTime(105, start + duration);
-  oscillatorGain.gain.setValueAtTime(0.028, start);
-  oscillatorGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  oscillator.connect(oscillatorGain).connect(context.destination);
+function playWoodKnock(context: AudioContext, start: number) {
+  const master = context.createGain();
+  const filter = context.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 820;
+  master.gain.setValueAtTime(0.055, start);
+  master.gain.exponentialRampToValueAtTime(0.0001, start + 0.085);
+  master.connect(filter).connect(context.destination);
 
+  for (const [frequency, type] of [[128, "triangle"], [214, "sine"]] as const) {
+    const oscillator = context.createOscillator();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, start);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.72, start + 0.08);
+    oscillator.connect(master);
+    oscillator.start(start);
+    oscillator.stop(start + 0.09);
+  }
+}
+
+function playWoodSlide(context: AudioContext) {
+  const start = context.currentTime;
+  const duration = 0.2;
   const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate);
   const samples = buffer.getChannelData(0);
+  let smoothedNoise = 0;
+
   for (let index = 0; index < samples.length; index += 1) {
-    samples[index] = (Math.random() * 2 - 1) * (1 - index / samples.length);
+    const progress = index / samples.length;
+    smoothedNoise = smoothedNoise * 0.86 + (Math.random() * 2 - 1) * 0.14;
+    const grain = 0.78 + Math.sin(progress * Math.PI * 18) * 0.12;
+    samples[index] = smoothedNoise * 2.8 * grain * Math.pow(1 - progress, 0.45);
   }
-  const noise = context.createBufferSource();
-  const filter = context.createBiquadFilter();
-  const noiseGain = context.createGain();
-  filter.type = "lowpass";
-  filter.frequency.value = 720;
-  noise.buffer = buffer;
-  noiseGain.gain.setValueAtTime(0.012, start);
-  noiseGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  noise.connect(filter).connect(noiseGain).connect(context.destination);
-  oscillator.start(start);
-  noise.start(start);
-  oscillator.stop(start + duration);
+
+  const source = context.createBufferSource();
+  const highPass = context.createBiquadFilter();
+  const bodyFilter = context.createBiquadFilter();
+  const gain = context.createGain();
+  source.buffer = buffer;
+  highPass.type = "highpass";
+  highPass.frequency.value = 95;
+  bodyFilter.type = "lowpass";
+  bodyFilter.frequency.setValueAtTime(1_050, start);
+  bodyFilter.frequency.exponentialRampToValueAtTime(520, start + duration);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(0.035, start + 0.012);
+  gain.gain.setValueAtTime(0.025, start + duration * 0.55);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  source.connect(highPass).connect(bodyFilter).connect(gain).connect(context.destination);
+  source.start(start);
+  playWoodKnock(context, start + duration - 0.025);
 }
 
 export function useSound() {
@@ -61,7 +83,7 @@ export function useSound() {
     if (!AudioContextClass) return;
     const context = new AudioContextClass();
     const now = context.currentTime;
-    if (name === "move") playSoftSlide(context);
+    if (name === "move") playWoodSlide(context);
     if (name === "turn") {
       playTone(context, 294, now, 0.18, 0.022);
       playTone(context, 392, now + 0.1, 0.24, 0.018);
@@ -71,7 +93,7 @@ export function useSound() {
       playTone(context, 440, now + 0.11, 0.34, 0.022);
       playTone(context, 554, now + 0.22, 0.4, 0.019);
     }
-    window.setTimeout(() => void context.close(), name === "complete" ? 800 : 500);
+    window.setTimeout(() => void context.close(), name === "complete" ? 800 : 550);
   }, [enabled]);
 
   return { enabled, toggle, play };

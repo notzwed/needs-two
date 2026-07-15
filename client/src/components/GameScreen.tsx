@@ -51,9 +51,9 @@ export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHo
   }
 
   async function move(tileId: number) {
+    play("move");
     const result = await onMove(tileId);
-    if (result.ok) play("move");
-    else if (result.message) {
+    if (!result.ok && result.message) {
       setNotice(result.message);
       window.setTimeout(() => setNotice(""), 1_100);
     }
