@@ -29,7 +29,7 @@ export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHo
 
   useEffect(() => {
     if (previousPlayer.current !== room.game.activePlayer || (previousPhase.current !== "transition" && room.game.phase === "transition")) play("turn");
-    if (previousPhase.current !== "completed" && room.game.phase === "completed") play("complete");
+    if (previousPhase.current !== "completed" && room.game.phase === "completed" && room.game.completionReason === "solved") play("complete");
     previousPhase.current = room.game.phase;
     previousPlayer.current = room.game.activePlayer;
   }, [play, room.game.activePlayer, room.game.phase]);
@@ -95,6 +95,7 @@ export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHo
           elapsedMs={room.game.elapsedMs}
           moves={room.game.moveCount}
           rematchReady={player?.rematchReady ?? false}
+          completionReason={room.game.completionReason}
           onRematch={onRematch}
           onHome={onHome}
         />

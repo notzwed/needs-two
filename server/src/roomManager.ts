@@ -1,5 +1,6 @@
 import {
   BOARD_SIZE,
+  GAME_DURATION_MS,
   TURN_DURATION_MS,
   TURN_TRANSITION_MS,
   type GamePhase,
@@ -20,7 +21,6 @@ interface ManagedPlayer extends Player {
 }
 
 interface PauseSnapshot {
-  phase: GamePhase;
   remainingTurnMs: number;
 }
 
@@ -35,18 +35,23 @@ interface ManagedRoom {
 
 export interface RoomManagerOptions {
   turnDurationMs?: number;
+  gameDurationMs?: number;
   transitionMs?: number;
   random?: () => number;
 }
 
+type TickEvent = "game-started" | "turn-changed" | "game-completed";
+
 export class RoomManager {
   private readonly rooms = new Map<string, ManagedRoom>();
   readonly turnDurationMs: number;
+  readonly gameDurationMs: number;
   readonly transitionMs: number;
   private readonly random: () => number;
 
   constructor(options: RoomManagerOptions = {}) {
     this.turnDurationMs = options.turnDurationMs ?? TURN_DURATION_MS;
+    this.gameDurationMs = options.gameDurationMs ?? GAME_DURATION_MS;
     this.transitionMs = options.transitionMs ?? TURN_TRANSITION_MS;
     this.random = options.random ?? Math.random;
   }
@@ -106,6 +111,7 @@ export class RoomManager {
     const player = room.players.find((candidate) => candidate.id === sessionId && candidate.connected);
     if (!player) throw new Error("Non fai parte di questa stanza.");
     if (room.game.phase !== "playing") throw new Error("Aspetta un momento.");
+    if (room.game.gameEndsAt && Date.now() >= room.game.gameEndsAt) throw new Error("Tempo scaduto.");
     if (room.game.activePlayer !== player.number) throw new Error("Aspetta il tuo turno.");
     if (!moveTile(room.game, tileId)) throw new Error("Questo tassello non può muoversi.");
 
@@ -113,9 +119,11 @@ export class RoomManager {
       const now = Date.now();
       room.game.phase = "completed";
       room.game.completedAt = now;
+      room.game.gameEndsAt = null;
       room.game.turnEndsAt = null;
       room.game.transitionEndsAt = null;
-      room.game.elapsedMs = room.game.startedAt ? now - room.game.startedAt : 0;
+      room.game.completionReason = "solved";
+      room.game.elapsedMs = room.game.startedAt ? Math.max(0, now - room.game.startedAt) : 0;
     }
     return this.publicState(room);
   }
@@ -124,6 +132,7 @@ export class RoomManager {
     const room = this.requireRoom(codeInput);
     const player = room.players.find((candidate) => candidate.id === sessionId);
     if (!player) throw new Error("Non fai parte di questa stanza.");
+    if (room.game.phase !== "completed") throw new Error("La partita non è ancora completata.");
     player.rematchReady = true;
     if (room.players.length === 2 && room.players.every((candidate) => candidate.rematchReady)) {
       room.game = this.newGame("starting", room.game.puzzleId);
@@ -141,15 +150,17 @@ export class RoomManager {
       player.connected = false;
       player.socketId = null;
       player.disconnectedAt = now;
-      if (room.game.phase === "playing" || room.game.phase === "transition" || room.game.phase === "starting") {
+      if (["playing", "transition", "starting"].includes(room.game.phase)) {
         room.pauseSnapshot = {
-          phase: room.game.phase,
           remainingTurnMs: room.game.turnEndsAt
             ? Math.max(0, room.game.turnEndsAt - now)
             : this.turnDurationMs,
         };
-        room.game.elapsedMs = room.game.startedAt ? now - room.game.startedAt : room.game.elapsedMs;
+        room.game.elapsedMs = room.game.startedAt
+          ? Math.max(0, Math.min(this.gameDurationMs, now - room.game.startedAt))
+          : room.game.elapsedMs;
         room.game.phase = "paused";
+        room.game.gameEndsAt = null;
         room.game.turnEndsAt = null;
         room.game.transitionEndsAt = null;
       }
@@ -166,15 +177,20 @@ export class RoomManager {
     if (room.players.length === 0) this.rooms.delete(room.code);
   }
 
-  tick(now = Date.now()): Array<{ code: string; event: "game-started" | "turn-changed"; state: RoomState }> {
-    const updates: Array<{ code: string; event: "game-started" | "turn-changed"; state: RoomState }> = [];
+  tick(now = Date.now()): Array<{ code: string; event: TickEvent; state: RoomState }> {
+    const updates: Array<{ code: string; event: TickEvent; state: RoomState }> = [];
     for (const room of this.rooms.values()) {
-      if (room.game.phase === "starting" && room.game.transitionEndsAt && now >= room.game.transitionEndsAt) {
+      if (["playing", "transition"].includes(room.game.phase) && room.game.gameEndsAt && now >= room.game.gameEndsAt) {
+        this.completeByTimeout(room, now);
+        updates.push({ code: room.code, event: "game-completed", state: this.publicState(room, now) });
+      } else if (room.game.phase === "starting" && room.game.transitionEndsAt && now >= room.game.transitionEndsAt) {
+        const playingStartsAt = now + this.transitionMs;
         room.game.phase = "transition";
-        room.game.startedAt = now;
+        room.game.startedAt = playingStartsAt;
         room.game.elapsedMs = 0;
-        room.game.transitionEndsAt = now + this.transitionMs;
-        room.game.turnEndsAt = now + this.transitionMs + this.turnDurationMs;
+        room.game.transitionEndsAt = playingStartsAt;
+        room.game.turnEndsAt = playingStartsAt + this.turnDurationMs;
+        room.game.gameEndsAt = playingStartsAt + this.gameDurationMs;
         updates.push({ code: room.code, event: "game-started", state: this.publicState(room, now) });
       } else if (room.game.phase === "transition" && room.game.transitionEndsAt && now >= room.game.transitionEndsAt) {
         room.game.phase = "playing";
@@ -198,6 +214,16 @@ export class RoomManager {
     return updates;
   }
 
+  private completeByTimeout(room: ManagedRoom, now: number): void {
+    room.game.phase = "completed";
+    room.game.completedAt = now;
+    room.game.gameEndsAt = null;
+    room.game.turnEndsAt = null;
+    room.game.transitionEndsAt = null;
+    room.game.completionReason = "timeout";
+    room.game.elapsedMs = this.gameDurationMs;
+  }
+
   private startGame(room: ManagedRoom): void {
     room.game = this.newGame("starting");
     room.game.transitionEndsAt = Date.now() + 1_000;
@@ -206,11 +232,13 @@ export class RoomManager {
   private resumeIfReady(room: ManagedRoom): void {
     if (room.players.length !== 2 || !room.players.every((player) => player.connected) || room.game.phase !== "paused") return;
     const now = Date.now();
-    const remaining = room.pauseSnapshot?.remainingTurnMs ?? this.turnDurationMs;
-    if (room.game.startedAt) room.game.startedAt = now - room.game.elapsedMs;
+    const playingStartsAt = now + this.transitionMs;
+    const remainingTurn = room.pauseSnapshot?.remainingTurnMs ?? this.turnDurationMs;
+    room.game.startedAt = playingStartsAt - room.game.elapsedMs;
+    room.game.gameEndsAt = playingStartsAt + Math.max(0, this.gameDurationMs - room.game.elapsedMs);
     room.game.phase = "transition";
-    room.game.transitionEndsAt = now + this.transitionMs;
-    room.game.turnEndsAt = now + this.transitionMs + Math.max(350, remaining);
+    room.game.transitionEndsAt = playingStartsAt;
+    room.game.turnEndsAt = playingStartsAt + Math.max(350, remainingTurn);
     room.pauseSnapshot = null;
   }
 
@@ -227,8 +255,10 @@ export class RoomManager {
       moveCount: 0,
       startedAt: null,
       completedAt: null,
+      gameEndsAt: null,
       turnEndsAt: null,
       transitionEndsAt: null,
+      completionReason: null,
       elapsedMs: 0,
     };
   }
@@ -254,7 +284,7 @@ export class RoomManager {
         board: room.game.board.map((tile) => ({ ...tile })),
         elapsedMs: room.game.phase === "completed" || room.game.phase === "paused"
           ? room.game.elapsedMs
-          : room.game.startedAt ? serverTime - room.game.startedAt : 0,
+          : room.game.startedAt ? Math.max(0, serverTime - room.game.startedAt) : 0,
       },
       serverTime,
     };
@@ -264,4 +294,3 @@ export class RoomManager {
     return Array.from({ length: 6 }, () => CODE_ALPHABET[Math.floor(this.random() * CODE_ALPHABET.length)]).join("");
   }
 }
-

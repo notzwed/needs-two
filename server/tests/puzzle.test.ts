@@ -40,8 +40,10 @@ describe("puzzle logic", () => {
       moveCount: 0,
       startedAt: Date.now(),
       completedAt: null,
+      gameEndsAt: Date.now() + 7 * 60_000,
       turnEndsAt: Date.now() + 7_000,
       transitionEndsAt: null,
+      completionReason: null,
       elapsedMs: 0,
     };
     const adjacent = game.board.find((tile) => areAdjacent(tile.position, game.emptyPosition))!;

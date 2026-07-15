@@ -154,9 +154,21 @@ p { margin: 0; }
 }
 .game-topbar > :last-child { justify-self: end; }
 .mini-brand { font-size: 1.12rem; font-weight: 800; }
-.turn-header { width: min(100%, 360px); margin: 4px auto 20px; text-align: center; }
-.turn-label { display: block; color: #4e504c; font-weight: 800; }
-.timer { display: block; margin: 2px 0 5px; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.turn-header { width: min(100%, 360px); margin: 2px auto 16px; text-align: center; }
+.game-clock {
+  min-height: 24px;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+  color: #777873;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.game-timer { color: #3f413e; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+.turn-label { display: block; min-height: 22px; color: #4e504c; font-weight: 800; }
+.timer { display: block; min-height: 34px; margin: 1px 0 5px; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .timer-track { width: 100%; height: 6px; overflow: hidden; border-radius: 3px; background: #e5e5e0; }
 .timer-track span { display: block; height: 100%; border-radius: inherit; background: var(--sage-strong); transition: width 80ms linear; }
 .turn-header.player-2 .timer-track span { background: var(--blue-strong); }
@@ -278,6 +290,7 @@ p { margin: 0; }
 .result-stats span { color: var(--muted); font-size: 0.85rem; }
 .result-stats strong { font-size: 1.25rem; }
 .success-mark { font-size: 1.8rem; font-weight: 800; }
+.success-mark.is-timeout { color: #765f42; background: #eee5d7; }
 .disconnect-card p { margin: -11px 0 24px; color: var(--muted); }
 .pause-icon { width: 54px; height: 54px; display: inline-grid; place-items: center; border-radius: 50%; color: #5c665d; background: #e7ede7; font-weight: 800; }
 
@@ -293,7 +306,7 @@ p { margin: 0; }
   .game-topbar { min-height: 43px; }
   .turn-header { margin: 2px auto 14px; }
   .timer { font-size: 1.75rem; }
-  .puzzle-shell { width: min(calc(100vw - 20px), calc(100svh - 215px)); min-width: 290px; }
+  .puzzle-shell { width: min(calc(100vw - 20px), calc(100svh - 245px)); min-width: 290px; }
   .puzzle-board { --gap: 3px; border-width: 5px; }
   .game-meta { padding: 0 4px; font-size: 0.74rem; }
   .game-meta span:last-child { display: none; }

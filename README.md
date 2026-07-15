@@ -1,6 +1,6 @@
 # Needs Two
 
-Puzzle cooperativo online per due giocatori. Il database Supabase gestisce in modo autoritativo stanze, board, turni da 7 minuti, timer, mosse, pause e rivincite; il client React invia soltanto richieste validate da funzioni PostgreSQL.
+Puzzle cooperativo online per due giocatori. Il database Supabase gestisce in modo autoritativo stanze, board, turni da 7 secondi, partita da 7 minuti, timer, mosse, pause e rivincite; il client React invia soltanto richieste validate da funzioni PostgreSQL.
 
 Gioco pubblico: <https://notzwed.github.io/needs-two/>
 

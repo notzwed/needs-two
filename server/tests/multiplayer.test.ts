@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { io as createClient, type Socket } from "socket.io-client";
+import { GAME_DURATION_MS, TURN_DURATION_MS } from "@needs-two/shared";
 import type {
   ActionResult,
   ClientToServerEvents,
@@ -7,6 +8,7 @@ import type {
   ServerToClientEvents,
 } from "@needs-two/shared";
 import { createNeedsTwoServer } from "../src/app.js";
+import { RoomManager } from "../src/roomManager.js";
 import { areAdjacent } from "../src/puzzle.js";
 
 type ClientSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -90,6 +92,22 @@ describe("authoritative multiplayer server", () => {
 
     const secondTurn = await waitForState(first, (state) => state.game.phase === "playing" && state.game.activePlayer === 2);
     expect(secondTurn.game.turnEndsAt).not.toBeNull();
+  });
+  it("keeps seven-second turns inside a seven-minute game", () => {
+    const rooms = new RoomManager({ transitionMs: 800 });
+    const created = rooms.createRoom("one", "socket-one");
+    const starting = rooms.joinRoom(created.code, "two", "socket-two");
+    const transitionAt = starting.game.transitionEndsAt!;
+    rooms.tick(transitionAt);
+    const game = rooms.getRoom(created.code)!.game;
+
+    expect(game.turnEndsAt! - game.startedAt!).toBe(TURN_DURATION_MS);
+    expect(game.gameEndsAt! - game.startedAt!).toBe(GAME_DURATION_MS);
+
+    const completed = rooms.tick(game.gameEndsAt!)[0];
+    expect(completed?.event).toBe("game-completed");
+    expect(completed?.state.game.completionReason).toBe("timeout");
+    expect(completed?.state.game.elapsedMs).toBe(GAME_DURATION_MS);
   });
 });
 

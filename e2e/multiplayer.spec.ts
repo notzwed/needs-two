@@ -28,10 +28,11 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(second.locator(".turn-label")).toHaveText("Turno del tuo amico");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "0");
   await expect(second.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
-  await expect(first.locator(".timer")).toHaveText(/^(7:00|6:59)$/);
+  await expect(first.locator(".timer")).toHaveText(/^(7\.0|6\.[0-9])$/);
+  await expect(first.locator(".game-timer")).toHaveText(/^(7:00|6:59)$/);
   for (const page of [first, second]) {
     const textOverlaps = await page.evaluate(() => {
-      const visible = [...document.querySelectorAll<HTMLElement>(".turn-label, .timer, .friend-turn-mask span, .turn-pill")]
+      const visible = [...document.querySelectorAll<HTMLElement>(".turn-label, .timer, .game-timer, .friend-turn-mask span, .turn-pill")]
         .filter((element) => Number.parseFloat(getComputedStyle(element).opacity) > 0.1)
         .map((element) => element.getBoundingClientRect());
       return visible.some((box, index) => visible.slice(index + 1).some((other) =>
@@ -48,6 +49,9 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.getByRole("button", { name: "Sposta tassello" }).first().click();
   await expect(first.getByText("1 mosse")).toBeVisible();
   await expect(second.getByText("1 mosse")).toBeVisible();
+  await expect(first.locator(".turn-label")).toHaveText("Turno del tuo amico", { timeout: 10_000 });
+  await expect(second.locator(".turn-label")).toHaveText("Il tuo turno");
+  await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
   await first.screenshot({ path: "artifacts/game-desktop.png", fullPage: true });
 
   await second.setViewportSize({ width: 390, height: 844 });

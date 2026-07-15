@@ -153,12 +153,17 @@ export function useGameSocket(sessionId: string) {
 
   useEffect(() => {
     if (!room) return;
-    const target = room.game.phase === "playing"
+    const phaseTarget = room.game.phase === "playing"
       ? room.game.turnEndsAt
       : ["starting", "transition"].includes(room.game.phase)
         ? room.game.transitionEndsAt
         : null;
-    if (target === null) return;
+    const gameTarget = ["playing", "transition"].includes(room.game.phase)
+      ? room.game.gameEndsAt
+      : null;
+    const targets = [phaseTarget, gameTarget].filter((target): target is number => target !== null);
+    if (targets.length === 0) return;
+    const target = Math.min(...targets);
     const timer = window.setTimeout(() => void advanceRoom(), Math.max(60, target - room.serverTime + 80));
     return () => window.clearTimeout(timer);
   }, [advanceRoom, room]);
