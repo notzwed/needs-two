@@ -1,6 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type SoundName = "move" | "turn" | "complete";
+
+const MUSIC_VOLUME = 0.038;
+const MUSIC_URL = `${import.meta.env.BASE_URL}audio/lofi-background.mp3`;
 
 function playTone(context: AudioContext, frequency: number, start: number, duration: number, volume: number) {
   const oscillator = context.createOscillator();
@@ -71,14 +74,75 @@ function playWoodSlide(context: AudioContext) {
 
 export function useSound() {
   const [enabled, setEnabled] = useState(() => localStorage.getItem("needs-two-sound") !== "off");
+  const enabledRef = useRef(enabled);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const fadeFrameRef = useRef(0);
+
+  const fadeMusic = useCallback((target: number, duration: number, pauseAfter = false) => {
+    const audio = musicRef.current;
+    if (!audio) return;
+    cancelAnimationFrame(fadeFrameRef.current);
+    const initial = audio.volume;
+    const startedAt = performance.now();
+    const update = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      audio.volume = initial + (target - initial) * progress;
+      if (progress < 1) {
+        fadeFrameRef.current = requestAnimationFrame(update);
+      } else if (pauseAfter) {
+        audio.pause();
+      }
+    };
+    fadeFrameRef.current = requestAnimationFrame(update);
+  }, []);
+
+  const startBackground = useCallback(() => {
+    const audio = musicRef.current;
+    if (!audio || !enabledRef.current || !audio.paused) return;
+    audio.volume = 0;
+    void audio.play().then(() => fadeMusic(MUSIC_VOLUME, 1_600)).catch(() => undefined);
+  }, [fadeMusic]);
+
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  useEffect(() => {
+    const audio = new Audio(MUSIC_URL);
+    audio.loop = true;
+    audio.preload = "none";
+    audio.volume = 0;
+    musicRef.current = audio;
+
+    const unlockAudio = () => startBackground();
+    document.addEventListener("pointerdown", unlockAudio, { passive: true });
+    document.addEventListener("keydown", unlockAudio);
+    return () => {
+      document.removeEventListener("pointerdown", unlockAudio);
+      document.removeEventListener("keydown", unlockAudio);
+      cancelAnimationFrame(fadeFrameRef.current);
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      musicRef.current = null;
+    };
+  }, [startBackground]);
+
   const toggle = useCallback(() => setEnabled((current) => {
     const next = !current;
+    enabledRef.current = next;
     localStorage.setItem("needs-two-sound", next ? "on" : "off");
+    if (next) {
+      startBackground();
+    } else {
+      fadeMusic(0, 280, true);
+    }
     return next;
-  }), []);
+  }), [fadeMusic, startBackground]);
 
   const play = useCallback((name: SoundName) => {
-    if (!enabled) return;
+    if (!enabledRef.current) return;
+    startBackground();
     const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
     if (!AudioContextClass) return;
     const context = new AudioContextClass();
@@ -94,7 +158,7 @@ export function useSound() {
       playTone(context, 554, now + 0.22, 0.4, 0.019);
     }
     window.setTimeout(() => void context.close(), name === "complete" ? 800 : 550);
-  }, [enabled]);
+  }, [startBackground]);
 
   return { enabled, toggle, play };
 }

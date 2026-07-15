@@ -96,6 +96,10 @@ needs-two/
 `-- package.json
 ```
 
+
+## Tema e audio
+
+La modalità notturna è disponibile in tutte le schermate e viene ricordata nel browser. Durante la partita il controllo audio gestisce insieme gli effetti e la musica LoFi di sottofondo, riprodotta a volume molto basso. La versione web di 7 minuti è in `client/public/audio/lofi-background.mp3`; il file sorgente originale non viene incluso nel repository.
 ## Pubblicazione GitHub Pages
 
 Con le variabili Supabase presenti in `client/.env.local`:

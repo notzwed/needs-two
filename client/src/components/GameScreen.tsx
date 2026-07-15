@@ -5,18 +5,21 @@ import { CompletionModal } from "./CompletionModal";
 import { PuzzleBoard } from "./PuzzleBoard";
 import { PuzzleReference } from "./PuzzleReference";
 import { TurnHeader } from "./TurnHeader";
+import { ThemeToggle } from "./ThemeToggle";
 import { useSound } from "../hooks/useSound";
 
 interface GameScreenProps {
   room: RoomState;
   sessionId: string;
   connected: boolean;
+  nightMode: boolean;
+  onToggleTheme: () => void;
   onMove: (tileId: number) => Promise<{ ok: boolean; message?: string }>;
   onRematch: () => void;
   onHome: () => void;
 }
 
-export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHome }: GameScreenProps) {
+export function GameScreen({ room, sessionId, connected, nightMode, onToggleTheme, onMove, onRematch, onHome }: GameScreenProps) {
   const player = room.players.find((candidate) => candidate.id === sessionId);
   const playerNumber = (player?.number ?? 1) as PlayerNumber;
   const canMove = connected && room.game.phase === "playing" && room.game.activePlayer === playerNumber;
@@ -66,9 +69,12 @@ export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHo
       <div className="game-topbar">
         <button className="icon-button" onClick={onHome} aria-label="Torna alla home"><Home size={20} /></button>
         <span className="mini-brand">Needs Two</span>
-        <button className="icon-button" onClick={toggle} aria-label={enabled ? "Disattiva audio" : "Attiva audio"}>
-          {enabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-        </button>
+        <div className="game-topbar-actions">
+          <ThemeToggle nightMode={nightMode} onToggle={onToggleTheme} />
+          <button className="icon-button" onClick={toggle} aria-label={enabled ? "Disattiva audio" : "Attiva audio"} title={enabled ? "Disattiva audio" : "Attiva audio"}>
+            {enabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+        </div>
       </div>
       <TurnHeader game={room.game} playerNumber={playerNumber} serverOffset={room.serverTime - Date.now()} />
       <div className="game-stage">

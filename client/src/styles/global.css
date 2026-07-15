@@ -153,6 +153,8 @@ p { margin: 0; }
   align-items: center;
 }
 .game-topbar > :last-child { justify-self: end; }
+.game-topbar-actions { display: flex; align-items: center; gap: 8px; }
+.theme-toggle.is-floating { position: fixed; z-index: 15; top: 18px; right: 18px; }
 .mini-brand { font-size: 1.12rem; font-weight: 800; }
 .turn-header { width: min(100%, 360px); margin: 2px auto 16px; text-align: center; }
 .game-clock {
@@ -521,4 +523,144 @@ p { margin: 0; }
 @keyframes tile-arrive {
   from { opacity: 0; scale: 0.94; filter: saturate(0.8); }
   to { opacity: 1; scale: 1; filter: none; }
+}
+
+/* Night mode */
+html[data-theme="night"] {
+  color-scheme: dark;
+  background: #171916;
+}
+html[data-theme="night"] body {
+  color: #f0f1eb;
+  background: #171916;
+}
+html[data-theme="night"] .home-screen,
+html[data-theme="night"] .center-screen,
+html[data-theme="night"] .game-screen {
+  background: #171916;
+}
+html[data-theme="night"] .game-screen.is-watching { background: #1d201c; }
+html[data-theme="night"] .room-card,
+html[data-theme="night"] .completion-card,
+html[data-theme="night"] .disconnect-card {
+  border-color: #3c4038;
+  background: #252822;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.25);
+}
+html[data-theme="night"] .eyebrow,
+html[data-theme="night"] .waiting-status,
+html[data-theme="night"] .game-meta,
+html[data-theme="night"] .game-clock,
+html[data-theme="night"] .reference-label,
+html[data-theme="night"] .result-stats span,
+html[data-theme="night"] .disconnect-card p {
+  color: #afb2a8;
+}
+html[data-theme="night"] .game-timer,
+html[data-theme="night"] .turn-label { color: #e5e7df; }
+html[data-theme="night"] .icon-button {
+  border-color: #41453c;
+  color: #e4e7de;
+  background: #292c26;
+}
+html[data-theme="night"] .icon-button:hover { background: #34382f; }
+html[data-theme="night"] .button-primary {
+  color: #172019;
+  background: #a9c1a7;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
+}
+html[data-theme="night"] .button-primary:hover:not(:disabled) { background: #b8ceb5; }
+html[data-theme="night"] .button-secondary {
+  color: #eceee7;
+  border-color: #45493f;
+  background: #2b2e28;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.17);
+}
+html[data-theme="night"] .button-secondary:hover:not(:disabled) { background: #353931; }
+html[data-theme="night"] .text-button { color: #b7baaf; }
+html[data-theme="night"] .join-form label { color: #c7cac0; }
+html[data-theme="night"] .join-form input {
+  color: #f2f3ed;
+  border-color: #484c42;
+  background: #1e211d;
+}
+html[data-theme="night"] .join-form input::placeholder { color: #767a70; }
+html[data-theme="night"] .form-error { color: #eda79e; }
+html[data-theme="night"] .timer-track { background: #363a32; }
+html[data-theme="night"] .puzzle-board {
+  border-color: #30342d;
+  background: #252821;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+html[data-theme="night"] .empty-space {
+  border-color: #4a4e44;
+  background: #292c26;
+}
+html[data-theme="night"] .puzzle-shell.is-watching .puzzle-board {
+  filter: grayscale(0.5) saturate(0.58) brightness(0.78);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+}
+html[data-theme="night"] .friend-turn-mask { background: rgba(20, 22, 19, 0.22); }
+html[data-theme="night"] .friend-turn-mask span {
+  color: #e0e3da;
+  border-color: rgba(220, 224, 214, 0.1);
+  background: rgba(39, 43, 36, 0.94);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24);
+}
+html[data-theme="night"] .turn-pill,
+html[data-theme="night"] .notice-pill {
+  color: #e9ece4;
+  border-color: #44483e;
+  background: #344238;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+html[data-theme="night"] .turn-pill.player-2 { background: #34434a; }
+html[data-theme="night"] .modal-backdrop,
+html[data-theme="night"] .reference-modal-backdrop {
+  background: rgba(23, 25, 22, 0.9);
+}
+html[data-theme="night"] .result-stats > div + div { border-color: #40443b; }
+html[data-theme="night"] .found-mark,
+html[data-theme="night"] .success-mark {
+  color: #b8d2b8;
+  background: #344238;
+}
+html[data-theme="night"] .success-mark.is-timeout {
+  color: #dcc49e;
+  background: #493f31;
+}
+html[data-theme="night"] .pause-icon {
+  color: #cad1c6;
+  background: #343a32;
+}
+html[data-theme="night"] .reference-thumbnail {
+  border-color: #45493f;
+  background: #2b2e28;
+  box-shadow: 0 4px 13px rgba(0, 0, 0, 0.28);
+}
+html[data-theme="night"] .reference-zoom-icon {
+  color: #ecede8;
+  border-color: rgba(230, 233, 225, 0.12);
+  background: rgba(37, 40, 34, 0.92);
+}
+html[data-theme="night"] .reference-modal > img {
+  border-color: #30342d;
+  background: #30342d;
+  box-shadow: 0 24px 65px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="night"] button:focus-visible,
+html[data-theme="night"] input:focus-visible { outline-color: #a9c1a7; }
+
+.home-screen,
+.center-screen,
+.room-card,
+.game-screen,
+.icon-button,
+.button,
+.join-form input,
+.completion-card,
+.disconnect-card {
+  transition-property: background-color, border-color, color, box-shadow, transform;
+  transition-duration: 260ms;
+  transition-timing-function: ease;
 }

@@ -8,6 +8,11 @@ test("two browsers share an authoritative game and the layout stays responsive",
 
   await first.goto("./");
   await expect(first.getByRole("heading", { name: "Needs Two" })).toBeVisible();
+  await first.getByRole("button", { name: "Passa alla modalità notte" }).click();
+  await expect(first.locator("html")).toHaveAttribute("data-theme", "night");
+  await expect(first.locator(".home-screen")).toHaveCSS("background-color", "rgb(23, 25, 22)");
+  await first.reload();
+  await expect(first.locator("html")).toHaveAttribute("data-theme", "night");
   await first.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
   await first.getByRole("button", { name: "Play" }).click();
   await first.getByRole("button", { name: "Crea una stanza" }).click();
@@ -19,6 +24,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await second.getByRole("button", { name: "Entra con un codice" }).click();
   await second.getByLabel("Codice amico").fill(code.toLowerCase());
   await expect(second.getByLabel("Codice amico")).toHaveValue(code);
+  const musicRequest = first.waitForRequest((request) => request.url().includes("/audio/lofi-background.mp3"));
   await second.getByRole("button", { name: "Entra", exact: true }).click();
 
   await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 5_000 });
@@ -28,6 +34,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.locator(".reference-thumbnail img")).toHaveJSProperty("complete", true);
   const thumbnailBox = await referenceButton.boundingBox();
   await referenceButton.click();
+  await musicRequest;
   const referenceDialog = first.getByRole("dialog", { name: "Immagine di riferimento ingrandita" });
   await expect(referenceDialog).toBeVisible();
   await expect(referenceDialog.locator("img")).toBeVisible();
@@ -35,6 +42,11 @@ test("two browsers share an authoritative game and the layout stays responsive",
   expect(zoomedBox!.width).toBeGreaterThan(thumbnailBox!.width * 2);
   await first.keyboard.press("Escape");
   await expect(referenceDialog).toBeHidden();
+  const audioButton = first.getByRole("button", { name: "Disattiva audio" });
+  await audioButton.click();
+  await expect(first.getByRole("button", { name: "Attiva audio" })).toBeVisible();
+  await first.getByRole("button", { name: "Attiva audio" }).click();
+  await expect(first.getByRole("button", { name: "Disattiva audio" })).toBeVisible();
   await expect(first.locator(".turn-pill")).toBeHidden();
   await expect(first.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(second.locator(".turn-label")).toHaveText("Turno del tuo amico");
