@@ -1,5 +1,5 @@
 export const BOARD_SIZE = 4;
-export const TURN_DURATION_MS = 7_000;
+export const TURN_DURATION_MS = 7 * 60 * 1_000;
 export const TURN_TRANSITION_MS = 800;
 
 export type PlayerNumber = 1 | 2;

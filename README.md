@@ -86,7 +86,7 @@ needs-two/
 
 - Stanze da massimo due giocatori con codice di 6 caratteri non ambiguo.
 - Puzzle 4×4 sempre risolvibile, creato tramite una lunga sequenza di mosse valide.
-- Turni server-side da 7 secondi e transizione bloccante da 800 ms.
+- Turni server-side da 7 minuti e transizione bloccante da 800 ms.
 - Più mosse valide consentite nello stesso turno.
 - Pausa immediata alla disconnessione e finestra di riconnessione di 30 secondi.
 - Rivincita quando entrambi i giocatori la richiedono.

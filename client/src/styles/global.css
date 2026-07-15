@@ -197,13 +197,11 @@ p { margin: 0; }
   box-shadow: 0 2px 5px rgba(39, 40, 36, 0.14);
   cursor: default;
   transform-origin: center;
-  will-change: transform, scale, filter;
-  transition: transform 300ms cubic-bezier(0.16, 0.88, 0.24, 1), border-radius 350ms ease, box-shadow 260ms ease, filter 220ms ease, scale 160ms ease;
+  will-change: transform;
+  transition: transform 300ms cubic-bezier(0.16, 0.88, 0.24, 1), border-radius 350ms ease;
   touch-action: manipulation;
 }
 .puzzle-tile.is-movable { cursor: pointer; }
-.puzzle-tile.is-movable:hover { filter: brightness(1.04); box-shadow: 0 4px 9px rgba(39, 40, 36, 0.2); }
-.puzzle-tile.is-movable:active { filter: brightness(0.96); }
 .empty-space {
   z-index: 1;
   border: 1px dashed #d5d5cf;
@@ -351,13 +349,6 @@ p { margin: 0; }
   animation: tile-arrive 390ms cubic-bezier(0.18, 0.88, 0.28, 1.08) both;
   animation-delay: calc(var(--tile-index) * 14ms);
 }
-.puzzle-tile.is-movable:active {
-  scale: 0.965;
-}
-.puzzle-tile.just-moved {
-  z-index: 3;
-  animation: tile-settle 360ms cubic-bezier(0.16, 0.86, 0.24, 1) both;
-}
 .puzzle-shell.is-watching .puzzle-board {
   filter: grayscale(0.52) saturate(0.62) brightness(0.96);
   transform: scale(0.992);
@@ -415,10 +406,4 @@ p { margin: 0; }
 @keyframes tile-arrive {
   from { opacity: 0; scale: 0.94; filter: saturate(0.8); }
   to { opacity: 1; scale: 1; filter: none; }
-}
-@keyframes tile-settle {
-  0% { scale: 1; }
-  52% { scale: 0.984; }
-  78% { scale: 1.006; }
-  100% { scale: 1; }
 }

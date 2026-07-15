@@ -74,9 +74,9 @@ export function GameScreen({ room, sessionId, connected, onMove, onRematch, onHo
       <div className="game-meta">
         <span>Tu: Player {playerNumber}</span><span>{room.game.moveCount} mosse</span><span>Stanza {room.code}</span>
       </div>
-      {room.game.phase === "transition" && (
+      {room.game.phase === "transition" && room.game.activePlayer === playerNumber && (
         <div className={`turn-pill player-${room.game.activePlayer}`} role="status">
-          {room.game.activePlayer === playerNumber ? "Tocca a te!" : "Turno del tuo amico"}
+          Tocca a te!
         </div>
       )}
       {notice && <div className="notice-pill" role="status">{notice}</div>}
