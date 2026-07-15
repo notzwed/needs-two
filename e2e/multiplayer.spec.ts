@@ -6,7 +6,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   const first = await firstContext.newPage();
   const second = await secondContext.newPage();
 
-  await first.goto("/");
+  await first.goto("./");
   await expect(first.getByRole("heading", { name: "Needs Two" })).toBeVisible();
   await first.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
   await first.getByRole("button", { name: "Play" }).click();
@@ -14,7 +14,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   const code = (await first.locator(".room-code").textContent())!.trim();
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
 
-  await second.goto("/");
+  await second.goto("./");
   await second.getByRole("button", { name: "Play" }).click();
   await second.getByRole("button", { name: "Entra con un codice" }).click();
   await second.getByLabel("Codice amico").fill(code.toLowerCase());

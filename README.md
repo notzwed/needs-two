@@ -1,97 +1,107 @@
 # Needs Two
 
-Puzzle cooperativo online per due giocatori. La board, il turno e il timer sono gestiti dal server; i client inviano soltanto richieste di movimento validate dal server.
+Puzzle cooperativo online per due giocatori. Il database Supabase gestisce in modo autoritativo stanze, board, turni da 7 minuti, timer, mosse, pause e rivincite; il client React invia soltanto richieste validate da funzioni PostgreSQL.
+
+Gioco pubblico: <https://notzwed.github.io/needs-two/>
 
 ## Requisiti
 
 - Node.js 20 o successivo
 - npm 10 o successivo
+- un progetto Supabase per il multiplayer pubblico
 
-## Installazione e avvio
+## Installazione
 
-```bash
+```powershell
 cd C:\Users\Marco\needs-two
 npm install
+Copy-Item client/.env.example client/.env.local
+```
+
+Configura `client/.env.local`:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+```
+
+Le chiavi `sb_publishable_...` sono destinate al browser. La sicurezza non dipende dal segreto della chiave: le tabelle hanno RLS attivo, non sono leggibili direttamente e tutte le modifiche passano dalle RPC validate.
+
+## Database Supabase
+
+Dopo il login CLI, collega il progetto e applica le migration:
+
+```powershell
+npx supabase login
+npm run supabase:link
+npm run supabase:push
+```
+
+La migration principale è in `supabase/migrations/20260715213353_needs_two_multiplayer.sql`. Implementa codici stanza, massimo due giocatori, heartbeat, riconnessione, shuffle risolvibile, mosse e timer autoritativi.
+
+## Avvio locale
+
+```powershell
 npm run dev
 ```
 
-Il comando avvia:
+Apri <http://localhost:5173> in due browser, oppure in una finestra normale e una anonima. Crea una stanza nel primo browser e inserisci il codice nel secondo.
 
-- client Vite: `http://localhost:5173`
-- server Socket.IO: `http://localhost:3001`
-- health check: `http://localhost:3001/health`
-
-Apri il client in due browser (oppure in una finestra normale e una anonima), crea una stanza nel primo e inserisci il codice nel secondo.
-
-Per avviare i processi separatamente:
-
-```bash
-npm run dev -w server
-npm run dev -w client
-```
-
-Per usare URL o porte differenti:
+Il server Node/Socket.IO originale resta disponibile come implementazione locale separata:
 
 ```powershell
-$env:PORT=4001
-$env:CLIENT_ORIGIN="http://localhost:4173"
-npm run dev -w server
-
-$env:VITE_SERVER_URL="http://localhost:4001"
-npm run dev -w client -- --port 4173
+npm run dev:server
 ```
 
 ## Verifica
 
-```bash
+```powershell
 npm run typecheck
 npm test
 npm run build
-npm run test:e2e # con client e server gia avviati tramite npm run dev
+npm run test:e2e
 ```
 
-I test includono 250 puzzle generati con verifica di risolvibilità, un test Socket.IO con due client reali e un test Playwright end-to-end in due contesti browser.
+I test server verificano anche centinaia di puzzle generati tramite sequenze di mosse valide. Il test Playwright apre due contesti browser e controlla stanza condivisa, blocco del giocatore non attivo, sincronizzazione della mossa, timer, maschera del turno e layout mobile.
 
 ## Immagini puzzle
 
-Le 33 immagini sono in `client/public/puzzles`. Le prime tre sono:
+Le 33 illustrazioni quadrate sono in `client/public/puzzles`. Per sostituirle, mantieni gli stessi nomi e preferibilmente il formato PNG quadrato.
 
-- `cottage.png`
-- `red-panda.png`
-- `pond.png`
+Per aggiungere una nuova immagine:
 
-Per sostituirle, mantieni immagini quadrate e gli stessi nomi. Per aggiungerne altre, inserisci il file nella stessa cartella e aggiungi il suo nome senza estensione a `PUZZLE_IDS` in `server/src/puzzle.ts`. Il client usa automaticamente l'URL `/puzzles/<puzzleId>.png` e suddivide l'immagine con `background-position`.
+1. Inserisci il file in `client/public/puzzles`.
+2. Aggiungi il nome senza estensione a `PUZZLE_IDS` in `server/src/puzzle.ts`.
+3. Aggiungi lo stesso ID all'array della funzione `needs_two_puzzle_id` nella migration Supabase.
+
+Il client suddivide automaticamente ogni immagine 4x4 tramite `background-position`.
 
 ## Struttura
 
 ```text
 needs-two/
-├── client/
-│   ├── public/puzzles/       # illustrazioni locali
-│   └── src/
-│       ├── components/       # schermate, board, timer, modali
-│       ├── hooks/            # Socket.IO e audio opzionale
-│       └── styles/           # stile e animazioni responsive
-├── server/
-│   ├── src/
-│   │   ├── app.ts            # eventi Socket.IO e server HTTP
-│   │   ├── roomManager.ts    # stanze, timer, turni e riconnessioni
-│   │   └── puzzle.ts         # shuffle risolvibile e validazione mosse
-│   └── tests/                # test logica e multiplayer
-├── shared/src/               # tipi ed eventi condivisi
-└── package.json              # workspace e comandi comuni
+|-- client/
+|   |-- public/puzzles/       # 33 illustrazioni locali
+|   `-- src/
+|       |-- components/       # schermate, board, timer e modali
+|       |-- hooks/            # Supabase Realtime e audio opzionale
+|       `-- styles/           # stile e animazioni responsive
+|-- server/
+|   |-- src/                  # backend Node/Socket.IO locale
+|   `-- tests/                # logica puzzle e multiplayer
+|-- shared/src/               # tipi condivisi
+|-- supabase/
+|   `-- migrations/           # schema e RPC autoritative
+|-- e2e/                      # test Playwright con due browser
+`-- package.json
 ```
 
-## Regole implementate
+## Pubblicazione GitHub Pages
 
-- Stanze da massimo due giocatori con codice di 6 caratteri non ambiguo.
-- Puzzle 4×4 sempre risolvibile, creato tramite una lunga sequenza di mosse valide.
-- Turni server-side da 7 minuti e transizione bloccante da 800 ms.
-- Più mosse valide consentite nello stesso turno.
-- Pausa immediata alla disconnessione e finestra di riconnessione di 30 secondi.
-- Rivincita quando entrambi i giocatori la richiedono.
-- Controlli tastiera, focus visibile e supporto a `prefers-reduced-motion`.
+Con le variabili Supabase presenti in `client/.env.local`:
 
-## Pubblicazione
+```powershell
+npm run deploy:pages
+```
 
-Il comando `npm run deploy:pages` pubblica il client sul ramo `gh-pages`. Il multiplayer richiede anche il server Node persistente: `render.yaml` contiene una configurazione pronta per Render. Dopo il deploy del server, imposta `VITE_SERVER_URL` con l'URL HTTPS del servizio ed esegui di nuovo `npm run deploy:pages`.
+Il comando crea la build con base `/needs-two/` e pubblica `client/dist` sul ramo `gh-pages`. Nessuna password PostgreSQL o chiave privata viene inclusa nella build.

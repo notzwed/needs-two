@@ -8,7 +8,10 @@
         "shared"
     ],
     "scripts": {
-        "dev": "npm run build -w shared && concurrently -n server,client -c green,blue \"npm run dev -w server\" \"npm run dev -w client\"",
+        "dev": "npm run build -w shared && npm run dev -w client",
+        "dev:server": "npm run build -w shared && npm run dev -w server",
+        "supabase:link": "supabase link --project-ref hbinopmqdzetogsyikxl",
+        "supabase:push": "supabase db push",
         "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
         "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
         "test": "npm run test -w server",
@@ -17,7 +20,7 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.61.1",
-        "concurrently": "^9.2.1",
-        "gh-pages": "^6.3.0"
+        "gh-pages": "^6.3.0",
+        "supabase": "^2.109.1"
     }
 }
