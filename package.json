@@ -13,7 +13,7 @@
         "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
         "test": "npm run test -w server",
         "test:e2e": "playwright test",
-        "deploy:pages": "npm run build -w shared && npm run build -w client && gh-pages -d client/dist"
+        "deploy:pages": "npm run build -w shared && npm run build -w client -- --base /needs-two/ && gh-pages -d client/dist"
     },
     "devDependencies": {
         "@playwright/test": "^1.61.1",
