@@ -12,6 +12,8 @@ interface GameChatProps {
   voiceStatus: VoiceStatus;
   muted: boolean;
   remoteStream: MediaStream | null;
+  voiceTransport: "webrtc" | "supabase" | null;
+  relayPacketsReceived: number;
   onClose: () => void;
   onSend: (message: string) => Promise<boolean>;
   onStartVoice: () => void;
@@ -36,6 +38,8 @@ export function GameChat({
   voiceStatus,
   muted,
   remoteStream,
+  voiceTransport,
+  relayPacketsReceived,
   onClose,
   onSend,
   onStartVoice,
@@ -90,7 +94,7 @@ export function GameChat({
     <>
       <audio ref={remoteAudio} autoPlay playsInline aria-hidden="true" data-testid="remote-audio" onCanPlay={() => void playRemoteAudio()} />
       {open && (
-        <aside className="chat-panel" aria-label={t("chat")} data-testid="game-chat">
+        <aside className="chat-panel" aria-label={t("chat")} data-testid="game-chat" data-voice-transport={voiceTransport ?? "none"} data-relay-packets={relayPacketsReceived}>
           <header className="chat-header">
             <div>
               <span className="chat-title"><MessageCircle size={18} />{t("chat")}</span>

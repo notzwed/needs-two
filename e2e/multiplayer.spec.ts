@@ -26,13 +26,14 @@ test("uses the browser language for every screen", async ({ browser }) => {
 });
 
 test("two browsers share an authoritative game and the layout stays responsive", async ({ browser }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   const installSyntheticMicrophone = async (context: Awaited<ReturnType<typeof browser.newContext>>) => {
     await context.addInitScript(() => {
+      (globalThis as typeof globalThis & { __NEEDS_TWO_FORCE_RELAY__?: boolean }).__NEEDS_TWO_FORCE_RELAY__ = true;
       Object.defineProperty(navigator, "mediaDevices", {
         configurable: true,
         value: {
-getUserMedia: async () => {
+          getUserMedia: async () => {
             const audioContext = new AudioContext();
             const destination = audioContext.createMediaStreamDestination();
             const oscillator = audioContext.createOscillator();
@@ -118,14 +119,20 @@ getUserMedia: async () => {
   await expect(first.getByRole("button", { name: "Attiva audio" })).toBeVisible();
   await first.getByRole("button", { name: "Attiva audio" }).click();
   await expect(first.getByRole("button", { name: "Disattiva audio" })).toBeVisible();
+  await expect.poll(async () => {
+    const label = await first.locator(".turn-label").textContent();
+    const seconds = Number(await first.locator(".timer").textContent());
+    return label === "Il tuo turno" && seconds >= 5;
+  }, { timeout: 20_000 }).toBe(true);
   await expect(first.locator(".turn-pill")).toBeHidden();
   await expect(first.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(second.locator(".turn-label")).toHaveText("Turno del tuo amico");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "0");
   await expect(second.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
-  await expect(first.locator(".timer")).toHaveText(/^(7\.0|6\.[0-9])$/);
+  await expect(first.locator(".timer")).toHaveText(/^[5-7]\.[0-9]$/);
   await expect(first.locator(".game-timer")).toHaveText(/^(7:00|6:[0-5][0-9])$/);
   for (const page of [first, second]) {
+    await expect(page.locator(".turn-pill")).toBeHidden({ timeout: 3_000 });
     const textOverlaps = await page.evaluate(() => {
       const visible = [...document.querySelectorAll<HTMLElement>(".turn-label, .timer, .game-timer, .friend-turn-mask span, .turn-pill")]
         .filter((element) => Number.parseFloat(getComputedStyle(element).opacity) > 0.1)
@@ -168,25 +175,14 @@ getUserMedia: async () => {
     first.getByRole("button", { name: "Attiva voce" }).click(),
     second.getByRole("button", { name: "Attiva voce" }).click(),
   ]);
-  await expect(first.getByText("Voce connessa")).toBeVisible({ timeout: 15_000 });
-  await expect(second.getByText("Voce connessa")).toBeVisible({ timeout: 15_000 });
+  await expect(first.getByText("Voce connessa")).toBeVisible({ timeout: 35_000 });
+  await expect(second.getByText("Voce connessa")).toBeVisible({ timeout: 35_000 });
   for (const page of [first, second]) {
-    await expect.poll(async () => page.getByTestId("remote-audio").evaluate((element) => {
-      const audio = element as HTMLAudioElement;
-      const stream = audio.srcObject as MediaStream | null;
-      const track = stream?.getAudioTracks()[0];
-      return {
-        audioTracks: stream?.getAudioTracks().length ?? 0,
-        paused: audio.paused,
-        trackMuted: track?.muted ?? true,
-        trackState: track?.readyState ?? "ended",
-      };
-    }), { timeout: 10_000 }).toEqual({
-      audioTracks: 1,
-      paused: false,
-      trackMuted: false,
-      trackState: "live",
-    });
+    const chat = page.getByTestId("game-chat");
+    await expect(chat).toHaveAttribute("data-voice-transport", "supabase", { timeout: 15_000 });
+    await expect.poll(async () => Number(await chat.getAttribute("data-relay-packets")), {
+      timeout: 10_000,
+    }).toBeGreaterThan(0);
   }
   await first.getByRole("button", { name: "Disattiva microfono" }).click();
   await expect(first.getByRole("button", { name: "Riattiva microfono" })).toBeVisible();

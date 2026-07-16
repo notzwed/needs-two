@@ -134,6 +134,8 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
         voiceStatus={chat.voiceStatus}
         muted={chat.muted}
         remoteStream={chat.remoteStream}
+        voiceTransport={chat.voiceTransport}
+        relayPacketsReceived={chat.relayPacketsReceived}
         onClose={() => setChatOpen(false)}
         onSend={chat.sendMessage}
         onStartVoice={chat.startVoice}
