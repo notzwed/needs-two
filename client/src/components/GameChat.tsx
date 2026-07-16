@@ -1,5 +1,5 @@
-import { MessageCircle, Mic, MicOff, PhoneOff, Send, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { MessageCircle, Mic, MicOff, PhoneOff, Send, Volume2, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlayerNumber } from "@needs-two/shared";
 import type { ChatMessage, VoiceStatus } from "../hooks/useRoomChat";
 import { t } from "../i18n";
@@ -43,6 +43,7 @@ export function GameChat({
   onToggleMute,
 }: GameChatProps) {
   const [draft, setDraft] = useState("");
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
   const remoteAudio = useRef<HTMLAudioElement>(null);
 
@@ -50,9 +51,32 @@ export function GameChat({
     if (open) messagesEnd.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, open]);
 
+  const playRemoteAudio = useCallback(async () => {
+    const audio = remoteAudio.current;
+    if (!audio || !audio.srcObject) return;
+    audio.muted = false;
+    audio.volume = 1;
+    try {
+      await audio.play();
+      setPlaybackBlocked(false);
+    } catch {
+      setPlaybackBlocked(true);
+    }
+  }, []);
+
   useEffect(() => {
-    if (remoteAudio.current) remoteAudio.current.srcObject = remoteStream;
-  }, [remoteStream]);
+    const audio = remoteAudio.current;
+    if (!audio) return;
+    audio.srcObject = remoteStream;
+    if (!remoteStream) {
+      setPlaybackBlocked(false);
+      return;
+    }
+    const startPlayback = () => void playRemoteAudio();
+    audio.addEventListener("loadedmetadata", startPlayback);
+    void playRemoteAudio();
+    return () => audio.removeEventListener("loadedmetadata", startPlayback);
+  }, [playRemoteAudio, remoteStream]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -64,7 +88,7 @@ export function GameChat({
 
   return (
     <>
-      <audio ref={remoteAudio} autoPlay aria-hidden="true" />
+      <audio ref={remoteAudio} autoPlay playsInline aria-hidden="true" data-testid="remote-audio" onCanPlay={() => void playRemoteAudio()} />
       {open && (
         <aside className="chat-panel" aria-label={t("chat")} data-testid="game-chat">
           <header className="chat-header">
@@ -77,6 +101,12 @@ export function GameChat({
             </button>
           </header>
 
+          {playbackBlocked && (
+            <button className="voice-playback" onClick={() => void playRemoteAudio()}>
+              <Volume2 size={16} />
+              <span>{t("playVoiceAudio")}</span>
+            </button>
+          )}
           <div className="voice-controls">
             {!voiceActive ? (
               <button className="voice-button" onClick={onStartVoice} disabled={!channelReady || voiceStarting}>

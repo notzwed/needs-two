@@ -32,12 +32,23 @@ test("two browsers share an authoritative game and the layout stays responsive",
       Object.defineProperty(navigator, "mediaDevices", {
         configurable: true,
         value: {
-          getUserMedia: async () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = 2;
-            canvas.height = 2;
-            canvas.getContext("2d")!.fillRect(0, 0, 2, 2);
-            return canvas.captureStream(1);
+getUserMedia: async () => {
+            const audioContext = new AudioContext();
+            const destination = audioContext.createMediaStreamDestination();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            gain.gain.value = 0.2;
+            oscillator.frequency.value = 220;
+            oscillator.connect(gain);
+            gain.connect(destination);
+            oscillator.start();
+            await audioContext.resume();
+            const testWindow = window as typeof window & {
+              __needsTwoAudioSources?: Array<{ audioContext: AudioContext; oscillator: OscillatorNode }>;
+            };
+            testWindow.__needsTwoAudioSources ??= [];
+            testWindow.__needsTwoAudioSources.push({ audioContext, oscillator });
+            return destination.stream;
           },
         },
       });
@@ -159,6 +170,24 @@ test("two browsers share an authoritative game and the layout stays responsive",
   ]);
   await expect(first.getByText("Voce connessa")).toBeVisible({ timeout: 15_000 });
   await expect(second.getByText("Voce connessa")).toBeVisible({ timeout: 15_000 });
+  for (const page of [first, second]) {
+    await expect.poll(async () => page.getByTestId("remote-audio").evaluate((element) => {
+      const audio = element as HTMLAudioElement;
+      const stream = audio.srcObject as MediaStream | null;
+      const track = stream?.getAudioTracks()[0];
+      return {
+        audioTracks: stream?.getAudioTracks().length ?? 0,
+        paused: audio.paused,
+        trackMuted: track?.muted ?? true,
+        trackState: track?.readyState ?? "ended",
+      };
+    }), { timeout: 10_000 }).toEqual({
+      audioTracks: 1,
+      paused: false,
+      trackMuted: false,
+      trackState: "live",
+    });
+  }
   await first.getByRole("button", { name: "Disattiva microfono" }).click();
   await expect(first.getByRole("button", { name: "Riattiva microfono" })).toBeVisible();
   await first.getByRole("button", { name: "Lascia voce" }).click();

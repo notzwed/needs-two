@@ -86,6 +86,7 @@ const italian = {
   voiceConnecting: "Connessione vocale...",
   voiceConnected: "Voce connessa",
   voiceError: "Microfono non disponibile",
+  playVoiceAudio: "Ascolta audio",
 } as const;
 
 type TranslationKey = keyof typeof italian;
@@ -180,6 +181,7 @@ const english: Dictionary = {
   voiceConnecting: "Connecting voice...",
   voiceConnected: "Voice connected",
   voiceError: "Microphone unavailable",
+  playVoiceAudio: "Play audio",
 };
 
 const dictionaries: Record<Language, Dictionary> = { it: italian, en: english };

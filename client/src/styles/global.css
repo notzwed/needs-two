@@ -925,3 +925,26 @@ html[data-theme="night"] .chat-send { color: #182019; background: #a9c1a7; }
     min-height: 340px;
   }
 }
+.voice-playback {
+  min-height: 38px;
+  margin: 8px 12px 0;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #c9d8c9;
+  border-radius: 8px;
+  color: #3f5b43;
+  background: #edf4ed;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.voice-playback:hover { background: #e3eee3; }
+html[data-theme="night"] .voice-playback {
+  color: #dfeadd;
+  border-color: #536350;
+  background: #344238;
+}
+html[data-theme="night"] .voice-playback:hover { background: #3d4d40; }
