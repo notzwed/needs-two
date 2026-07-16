@@ -26,8 +26,27 @@ test("uses the browser language for every screen", async ({ browser }) => {
 });
 
 test("two browsers share an authoritative game and the layout stays responsive", async ({ browser }) => {
-  const firstContext = await browser.newContext({ locale: "it-IT", viewport: { width: 1280, height: 900 } });
-  const secondContext = await browser.newContext({ locale: "it-IT", viewport: { width: 1280, height: 900 } });
+  test.setTimeout(60_000);
+  const installSyntheticMicrophone = async (context: Awaited<ReturnType<typeof browser.newContext>>) => {
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, "mediaDevices", {
+        configurable: true,
+        value: {
+          getUserMedia: async () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 2;
+            canvas.height = 2;
+            canvas.getContext("2d")!.fillRect(0, 0, 2, 2);
+            return canvas.captureStream(1);
+          },
+        },
+      });
+    });
+  };
+
+  const firstContext = await browser.newContext({ locale: "it-IT", viewport: { width: 1280, height: 900 }, permissions: ["microphone"] });
+  const secondContext = await browser.newContext({ locale: "it-IT", viewport: { width: 1280, height: 900 }, permissions: ["microphone"] });
+  await Promise.all([installSyntheticMicrophone(firstContext), installSyntheticMicrophone(secondContext)]);
   const first = await firstContext.newPage();
   const second = await secondContext.newPage();
 
@@ -119,10 +138,45 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
   await first.screenshot({ path: "artifacts/game-desktop.png", fullPage: true });
 
+  await first.getByRole("button", { name: "Apri chat" }).click();
+  await first.getByPlaceholder("Scrivi un messaggio").fill("Parto dall'angolo in alto");
+  await first.getByRole("button", { name: "Invia messaggio" }).click();
+  await expect(first.getByText("Parto dall'angolo in alto")).toBeVisible();
+
+  await second.getByRole("button", { name: "Apri chat" }).click();
+  await expect(second.getByText("Parto dall'angolo in alto")).toBeVisible({ timeout: 5_000 });
+  await first.getByTestId("game-chat").getByRole("button", { name: "Chiudi chat" }).click();
+  await second.getByPlaceholder("Scrivi un messaggio").fill("Va bene, continuo io");
+  await second.getByRole("button", { name: "Invia messaggio" }).click();
+  await expect(first.locator(".chat-badge")).toHaveText("1");
+  await first.getByRole("button", { name: "Apri chat" }).click();
+  await expect(first.getByText("Va bene, continuo io")).toBeVisible();
+  await expect(first.locator(".chat-badge")).toBeHidden();
+
+  await Promise.all([
+    first.getByRole("button", { name: "Attiva voce" }).click(),
+    second.getByRole("button", { name: "Attiva voce" }).click(),
+  ]);
+  await expect(first.getByText("Voce connessa")).toBeVisible({ timeout: 15_000 });
+  await expect(second.getByText("Voce connessa")).toBeVisible({ timeout: 15_000 });
+  await first.getByRole("button", { name: "Disattiva microfono" }).click();
+  await expect(first.getByRole("button", { name: "Riattiva microfono" })).toBeVisible();
+  await first.getByRole("button", { name: "Lascia voce" }).click();
+  await expect(second.getByText("In attesa del tuo amico")).toBeVisible({ timeout: 5_000 });
+  await first.getByTestId("game-chat").getByRole("button", { name: "Chiudi chat" }).click();
+  await second.getByTestId("game-chat").getByRole("button", { name: "Chiudi chat" }).click();
   await second.setViewportSize({ width: 390, height: 844 });
   const hasHorizontalOverflow = await second.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
   await expect(second.locator(".puzzle-board")).toBeInViewport();
+  await second.getByRole("button", { name: "Apri chat" }).click();
+  await expect(second.getByTestId("game-chat")).toBeInViewport();
+  const chatFitsMobile = await second.getByTestId("game-chat").evaluate((panel) => {
+    const box = panel.getBoundingClientRect();
+    return box.left >= 0 && box.right <= window.innerWidth && box.bottom <= window.innerHeight;
+  });
+  expect(chatFitsMobile).toBe(true);
+  await second.getByTestId("game-chat").getByRole("button", { name: "Chiudi chat" }).click();
   const topbarOverlaps = await second.evaluate(() => {
     const elements = [...document.querySelectorAll<HTMLElement>(".game-topbar > .icon-button, .mini-brand, .game-topbar-actions")]
       .filter((element) => getComputedStyle(element).display !== "none")
@@ -139,8 +193,8 @@ test("two browsers share an authoritative game and the layout stays responsive",
   );
   expect(requestedBackgroundMusic).toBe(false);
   const boardLayout = await first.locator(".puzzle-board").getAttribute("data-layout");
-  expect(["square4", "square8", "rectangle", "pentagon", "hexagon"]).toContain(boardLayout);
-  const expectedCells = { square4: 16, square8: 64, rectangle: 20, pentagon: 16, hexagon: 19 }[boardLayout!]!;
+  expect(["square4", "square8", "rectangle"]).toContain(boardLayout);
+  const expectedCells = { square4: 16, square8: 64, rectangle: 20 }[boardLayout!]!;
   await expect(first.locator(".puzzle-tile")).toHaveCount(expectedCells - 1);
   const firstTiles = await first.locator(".puzzle-tile").evaluateAll((tiles) =>
     tiles.map((tile) => ({
@@ -150,10 +204,6 @@ test("two browsers share an authoritative game and the layout stays responsive",
   );
   expect(new Set(firstTiles.map((tile) => tile.position)).size).toBe(expectedCells - 1);
   expect(firstTiles.every((tile) => tile.background.includes("/puzzles/"))).toBe(true);
-  if (boardLayout === "pentagon" || boardLayout === "hexagon") {
-    await expect(first.locator(".puzzle-board")).not.toHaveCSS("clip-path", "none");
-    await expect(first.locator(".puzzle-tile").first()).not.toHaveCSS("clip-path", "none");
-  }
 
   await firstContext.close();
   await secondContext.close();

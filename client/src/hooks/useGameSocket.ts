@@ -1,18 +1,10 @@
-import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ActionResult, RoomState } from "@needs-two/shared";
 import { t, translateServerError } from "../i18n";
+import { supabase } from "../supabaseClient";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const ROOM_STORAGE_KEY = "needs-two-room";
-
-const supabase = SUPABASE_URL && SUPABASE_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      realtime: { params: { eventsPerSecond: 8 } },
-    })
-  : null;
 
 type RoomRpc =
   | "needs_two_create_room"
@@ -115,9 +107,10 @@ export function useGameSocket(sessionId: string) {
 
   useEffect(() => {
     const code = room?.code;
-    if (!code || !supabase) return;
+    const client = supabase;
+    if (!code || !client) return;
 
-    const channel = supabase
+    const channel = client
       .channel(`needs-two:${code}`)
       .on("broadcast", { event: "refresh" }, () => void refreshRoom())
       .subscribe((status) => {
@@ -132,7 +125,7 @@ export function useGameSocket(sessionId: string) {
     channelRef.current = channel;
     return () => {
       if (channelRef.current === channel) channelRef.current = null;
-      void supabase.removeChannel(channel);
+      void client.removeChannel(channel);
     };
   }, [refreshRoom, room?.code]);
 

@@ -29,7 +29,7 @@ describe("puzzle logic", () => {
     }
   });
 
-  it.each(["square8", "rectangle", "pentagon", "hexagon"] as PuzzleLayout[])(
+  it.each(["square8", "rectangle"] as PuzzleLayout[])(
     "builds a solvable shuffled %s layout",
     (layout) => {
       const config = puzzleLayoutConfig(layout);

@@ -62,18 +62,16 @@ npm run build
 npm run test:e2e
 ```
 
-I test server verificano anche centinaia di puzzle generati tramite sequenze di mosse valide. Il test Playwright apre due contesti browser e controlla stanza condivisa, blocco del giocatore non attivo, sincronizzazione della mossa, timer, maschera del turno e layout mobile.
+I test server verificano anche centinaia di puzzle generati tramite sequenze di mosse valide. Il test Playwright apre due contesti browser e controlla stanza condivisa, chat testuale, voce WebRTC, blocco del giocatore non attivo, sincronizzazione della mossa, timer, maschera del turno e layout mobile.
 
 ## Immagini e layout puzzle
 
-Le 73 illustrazioni locali sono in client/public/puzzles: 33 puzzle quadrati 4×4 originali e 40 nuovi WebP, divisi in 10 quadrati 8×8, 10 rettangolari, 10 pentagonali e 10 esagonali.
+Le 53 illustrazioni locali sono in client/public/puzzles: 33 puzzle quadrati 4×4 originali, 10 quadrati 8×8 e 10 rettangolari in formato WebP.
 
 Il prefisso dell'ID determina automaticamente il layout:
 
 - square8-: board quadrata 8×8, 64 celle.
 - rect-: board 3:2 con griglia 5×4 e tasselli rettangolari.
-- pent-: board e tasselli ritagliati a cinque lati, con griglia 4×4.
-- hex-: board esagonale composta da 19 esagoni realmente adiacenti.
 - Senza prefisso: board quadrata 4×4 originale.
 
 Il server e Supabase scelgono sempre casualmente l'immagine e il layout; non esiste un selettore client. Ogni configurazione viene mescolata partendo dalla soluzione e applicando soltanto mosse valide.

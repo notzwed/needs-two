@@ -20,10 +20,6 @@ export const PUZZLE_IDS = [
   "square8-06", "square8-07", "square8-08", "square8-09", "square8-10",
   "rect-01", "rect-02", "rect-03", "rect-04", "rect-05",
   "rect-06", "rect-07", "rect-08", "rect-09", "rect-10",
-  "pent-01", "pent-02", "pent-03", "pent-04", "pent-05",
-  "pent-06", "pent-07", "pent-08", "pent-09", "pent-10",
-  "hex-01", "hex-02", "hex-03", "hex-04", "hex-05",
-  "hex-06", "hex-07", "hex-08", "hex-09", "hex-10",
 ] as const;
 
 export function areAdjacent(first: number, second: number, size = BOARD_SIZE): boolean {
