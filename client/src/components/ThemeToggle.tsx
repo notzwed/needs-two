@@ -1,4 +1,5 @@
 import { Moon, Sun } from "lucide-react";
+import { t } from "../i18n";
 
 interface ThemeToggleProps {
   nightMode: boolean;
@@ -7,7 +8,7 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ nightMode, onToggle, floating = false }: ThemeToggleProps) {
-  const label = nightMode ? "Passa alla modalità giorno" : "Passa alla modalità notte";
+  const label = nightMode ? t("dayMode") : t("nightMode");
   return (
     <button
       className={`icon-button theme-toggle ${floating ? "is-floating" : ""}`}

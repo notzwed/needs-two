@@ -1,5 +1,6 @@
 import { Check, Clock3, Home, RotateCcw } from "lucide-react";
 import type { CompletionReason } from "@needs-two/shared";
+import { t } from "../i18n";
 
 interface CompletionModalProps {
   elapsedMs: number;
@@ -19,7 +20,7 @@ function formatTime(milliseconds: number) {
 
 export function CompletionModal({ elapsedMs, moves, rematchReady, completionReason, onRematch, onHome }: CompletionModalProps) {
   const timedOut = completionReason === "timeout";
-  const title = timedOut ? "Tempo scaduto" : "Puzzle completato!";
+  const title = timedOut ? t("timeExpired") : t("puzzleCompleted");
 
   return (
     <div className="modal-backdrop">
@@ -29,13 +30,13 @@ export function CompletionModal({ elapsedMs, moves, rematchReady, completionReas
         </span>
         <h2 id="complete-title">{title}</h2>
         <div className="result-stats">
-          <div><span>Tempo</span><strong>{formatTime(elapsedMs)}</strong></div>
-          <div><span>Mosse</span><strong>{moves}</strong></div>
+          <div><span>{t("time")}</span><strong>{formatTime(elapsedMs)}</strong></div>
+          <div><span>{t("moves")}</span><strong>{moves}</strong></div>
         </div>
         <button className="button button-primary" onClick={onRematch} disabled={rematchReady}>
-          <RotateCcw size={18} />{rematchReady ? "In attesa dell'amico..." : "Gioca ancora"}
+          <RotateCcw size={18} />{rematchReady ? t("waitingFriend") : t("playAgain")}
         </button>
-        <button className="button button-secondary" onClick={onHome}><Home size={18} />Torna alla home</button>
+        <button className="button button-secondary" onClick={onHome}><Home size={18} />{t("backHome")}</button>
       </section>
     </div>
   );

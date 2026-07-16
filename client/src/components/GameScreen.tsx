@@ -1,3 +1,4 @@
+import { Home, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerNumber, RoomState } from "@needs-two/shared";
 import { CompletionModal } from "./CompletionModal";
@@ -6,6 +7,7 @@ import { PuzzleReference } from "./PuzzleReference";
 import { TurnHeader } from "./TurnHeader";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSound } from "../hooks/useSound";
+import { t } from "../i18n";
 
 interface GameScreenProps {
   room: RoomState;
@@ -19,8 +21,6 @@ interface GameScreenProps {
 }
 
 export function GameScreen({ room, sessionId, connected, nightMode, onToggleTheme, onMove, onRematch, onHome }: GameScreenProps) {
-  const homeButtonImage = `${import.meta.env.BASE_URL}branding/home-button.png`;
-  const volumeButtonImage = `${import.meta.env.BASE_URL}branding/volume-button.png`;
   const player = room.players.find((candidate) => candidate.id === sessionId);
   const playerNumber = (player?.number ?? 1) as PlayerNumber;
   const canMove = connected && room.game.phase === "playing" && room.game.activePlayer === playerNumber;
@@ -37,7 +37,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
     if (previousPhase.current !== "completed" && room.game.phase === "completed" && room.game.completionReason === "solved") play("complete");
     previousPhase.current = room.game.phase;
     previousPlayer.current = room.game.activePlayer;
-  }, [play, room.game.activePlayer, room.game.phase]);
+  }, [play, room.game.activePlayer, room.game.completionReason, room.game.phase]);
 
   useEffect(() => {
     if (room.game.phase !== "completed") {
@@ -50,7 +50,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
 
   function waitNotice() {
     if (room.game.phase !== "playing" || room.game.activePlayer !== playerNumber) {
-      setNotice("Aspetta il tuo turno");
+      setNotice(t("waitTurn"));
       window.setTimeout(() => setNotice(""), 1_100);
     }
   }
@@ -65,17 +65,17 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
     return result.ok;
   }
 
+  const moveCountKey = room.game.moveCount === 1 ? "moveCountOne" : "moveCountMany";
+
   return (
     <main className={`game-screen ${isWatching ? "is-watching" : "is-playing"}`}>
       <div className="game-topbar">
-        <button className="art-button home-art-button" onClick={onHome} aria-label="Torna alla home">
-          <img src={homeButtonImage} alt="" aria-hidden="true" />
-        </button>
+        <button className="icon-button" onClick={onHome} aria-label={t("backHome")} title={t("backHome")}><Home size={20} /></button>
         <span className="mini-brand">Needs Two</span>
         <div className="game-topbar-actions">
           <ThemeToggle nightMode={nightMode} onToggle={onToggleTheme} />
-          <button className={`art-button volume-art-button ${enabled ? "" : "is-muted"}`} onClick={toggle} aria-label={enabled ? "Disattiva audio" : "Attiva audio"} title={enabled ? "Disattiva audio" : "Attiva audio"}>
-            <img src={volumeButtonImage} alt="" aria-hidden="true" />
+          <button className="icon-button" onClick={toggle} aria-label={enabled ? t("audioOff") : t("audioOn")} title={enabled ? t("audioOff") : t("audioOn")}>
+            {enabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
         </div>
       </div>
@@ -85,11 +85,13 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
         <PuzzleReference puzzleId={room.game.puzzleId} />
       </div>
       <div className="game-meta">
-        <span>Tu: Player {playerNumber}</span><span>{room.game.moveCount} mosse</span><span>Stanza {room.code}</span>
+        <span>{t("youPlayer", { number: playerNumber })}</span>
+        <span>{t(moveCountKey, { count: room.game.moveCount })}</span>
+        <span>{t("roomMeta", { code: room.code })}</span>
       </div>
       {room.game.phase === "transition" && room.game.activePlayer === playerNumber && (
         <div className={`turn-pill player-${room.game.activePlayer}`} role="status">
-          Tocca a te!
+          {t("yourTurnPrompt")}
         </div>
       )}
       {notice && <div className="notice-pill" role="status">{notice}</div>}
@@ -97,9 +99,9 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
         <div className="modal-backdrop">
           <section className="disconnect-card" role="dialog" aria-modal="true">
             <span className="pause-icon" aria-hidden="true">Ⅱ</span>
-            <h2>Il tuo amico si è disconnesso</h2>
-            <p>La partita resta in pausa per 30 secondi.</p>
-            <button className="button button-secondary" onClick={onHome}>Torna alla home</button>
+            <h2>{t("friendDisconnected")}</h2>
+            <p>{t("pausedForThirty")}</p>
+            <button className="button button-secondary" onClick={onHome}>{t("backHome")}</button>
           </section>
         </div>
       )}

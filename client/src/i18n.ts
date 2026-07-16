@@ -1,0 +1,190 @@
+const italian = {
+  play: "Gioca",
+  createRoomError: "Non riesco a creare la stanza.",
+  joinRoomError: "Non riesco a entrare nella stanza.",
+  networkUnavailable: "Connessione non disponibile. Riprova tra poco.",
+  supabaseNotConfigured: "Il multiplayer non è configurato correttamente.",
+  roomUnavailable: "Stanza non disponibile.",
+  moveFailed: "La mossa non è riuscita.",
+  rematchFailed: "Non riesco a riavviare la partita.",
+  roomMissing: "Questa stanza non esiste più.",
+  roomFull: "Questa stanza è già piena.",
+  notRoomMember: "Non fai parte di questa stanza.",
+  waitMoment: "Aspetta un momento.",
+  waitTurn: "Aspetta il tuo turno.",
+  invalidTile: "Tassello non valido.",
+  tileCannotMove: "Questo tassello non può muoversi.",
+  gameNotCompleted: "La partita non è ancora completata.",
+  unexpectedError: "Qualcosa non ha funzionato. Riprova.",
+  timeExpired: "Tempo scaduto",
+  puzzleCompleted: "Puzzle completato!",
+  time: "Tempo",
+  moves: "Mosse",
+  waitingFriend: "In attesa dell'amico...",
+  playAgain: "Gioca ancora",
+  backHome: "Torna alla home",
+  audioOff: "Disattiva audio",
+  audioOn: "Attiva audio",
+  youPlayer: "Tu: Giocatore {number}",
+  moveCountOne: "{count} mossa",
+  moveCountMany: "{count} mosse",
+  roomMeta: "Stanza {code}",
+  yourTurnPrompt: "Tocca a te!",
+  friendDisconnected: "Il tuo amico si è disconnesso",
+  pausedForThirty: "La partita resta in pausa per 30 secondi.",
+  slidingPuzzle: "Puzzle scorrevole 4 per 4",
+  moveTile: "Sposta tassello",
+  tileNotMovable: "Tassello non spostabile",
+  friendPlaying: "Sta giocando il tuo amico",
+  referenceImage: "Immagine di riferimento",
+  reference: "Riferimento",
+  enlargeReference: "Ingrandisci l'immagine di riferimento",
+  enlargeImage: "Ingrandisci immagine",
+  fullPuzzleImage: "Immagine completa del puzzle {puzzle}",
+  enlargedReference: "Immagine di riferimento ingrandita",
+  enlargedPuzzleImage: "Immagine completa ingrandita del puzzle {puzzle}",
+  closeEnlargedImage: "Chiudi immagine ingrandita",
+  close: "Chiudi",
+  back: "Indietro",
+  playTogether: "Giochiamo insieme",
+  createRoom: "Crea una stanza",
+  joinWithCode: "Entra con un codice",
+  friendCode: "Codice amico",
+  join: "Entra",
+  invalidCodeLength: "Il codice deve avere 6 caratteri.",
+  dayMode: "Passa alla modalità giorno",
+  nightMode: "Passa alla modalità notte",
+  gameTimeRemaining: "{time} rimasti nella partita",
+  gameTime: "Tempo partita",
+  yourTurn: "Il tuo turno",
+  friendTurn: "Turno del tuo amico",
+  turnSecondsRemaining: "{time} secondi rimasti nel turno",
+  playerFound: "Giocatore trovato!",
+  sendCode: "Invia questo codice al tuo amico",
+  copied: "Copiato",
+  copyCode: "Copia codice",
+  waitingSecondPlayer: "In attesa del secondo giocatore...",
+} as const;
+
+type TranslationKey = keyof typeof italian;
+type Dictionary = Record<TranslationKey, string>;
+type Language = "it" | "en";
+
+const english: Dictionary = {
+  play: "Play",
+  createRoomError: "I couldn't create the room.",
+  joinRoomError: "I couldn't join the room.",
+  networkUnavailable: "Connection unavailable. Try again shortly.",
+  supabaseNotConfigured: "Multiplayer is not configured correctly.",
+  roomUnavailable: "Room unavailable.",
+  moveFailed: "The move didn't work.",
+  rematchFailed: "I couldn't restart the game.",
+  roomMissing: "This room no longer exists.",
+  roomFull: "This room is already full.",
+  notRoomMember: "You are not part of this room.",
+  waitMoment: "Wait a moment.",
+  waitTurn: "Wait for your turn.",
+  invalidTile: "Invalid tile.",
+  tileCannotMove: "This tile cannot move.",
+  gameNotCompleted: "The game is not completed yet.",
+  unexpectedError: "Something went wrong. Try again.",
+  timeExpired: "Time's up",
+  puzzleCompleted: "Puzzle completed!",
+  time: "Time",
+  moves: "Moves",
+  waitingFriend: "Waiting for your friend...",
+  playAgain: "Play again",
+  backHome: "Back to home",
+  audioOff: "Turn sound off",
+  audioOn: "Turn sound on",
+  youPlayer: "You: Player {number}",
+  moveCountOne: "{count} move",
+  moveCountMany: "{count} moves",
+  roomMeta: "Room {code}",
+  yourTurnPrompt: "Your turn!",
+  friendDisconnected: "Your friend disconnected",
+  pausedForThirty: "The game will stay paused for 30 seconds.",
+  slidingPuzzle: "4 by 4 sliding puzzle",
+  moveTile: "Move tile",
+  tileNotMovable: "Tile cannot move",
+  friendPlaying: "Your friend is playing",
+  referenceImage: "Reference image",
+  reference: "Reference",
+  enlargeReference: "Enlarge the reference image",
+  enlargeImage: "Enlarge image",
+  fullPuzzleImage: "Full image for puzzle {puzzle}",
+  enlargedReference: "Enlarged reference image",
+  enlargedPuzzleImage: "Enlarged full image for puzzle {puzzle}",
+  closeEnlargedImage: "Close enlarged image",
+  close: "Close",
+  back: "Back",
+  playTogether: "Let's play together",
+  createRoom: "Create a room",
+  joinWithCode: "Join with a code",
+  friendCode: "Friend code",
+  join: "Join",
+  invalidCodeLength: "The code must have 6 characters.",
+  dayMode: "Switch to day mode",
+  nightMode: "Switch to night mode",
+  gameTimeRemaining: "{time} left in the game",
+  gameTime: "Game time",
+  yourTurn: "Your turn",
+  friendTurn: "Your friend's turn",
+  turnSecondsRemaining: "{time} seconds left in the turn",
+  playerFound: "Player found!",
+  sendCode: "Send this code to your friend",
+  copied: "Copied",
+  copyCode: "Copy code",
+  waitingSecondPlayer: "Waiting for the second player...",
+};
+
+const dictionaries: Record<Language, Dictionary> = { it: italian, en: english };
+
+function detectLanguage(): Language {
+  if (typeof navigator === "undefined") return "en";
+  const requested = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const locale of requested) {
+    const language = locale.toLowerCase().split("-")[0];
+    if (language === "it" || language === "en") return language;
+  }
+  return "en";
+}
+
+export const language = detectLanguage();
+
+export function t(key: TranslationKey, values: Record<string, string | number> = {}): string {
+  return Object.entries(values).reduce(
+    (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+    dictionaries[language][key],
+  );
+}
+
+const serverErrors: Array<[string, TranslationKey]> = [
+  ["non esiste", "roomMissing"],
+  ["no longer exists", "roomMissing"],
+  ["gia piena", "roomFull"],
+  ["già piena", "roomFull"],
+  ["already full", "roomFull"],
+  ["non fai parte", "notRoomMember"],
+  ["not part of", "notRoomMember"],
+  ["aspetta un momento", "waitMoment"],
+  ["wait a moment", "waitMoment"],
+  ["aspetta il tuo turno", "waitTurn"],
+  ["wait for your turn", "waitTurn"],
+  ["tempo scaduto", "timeExpired"],
+  ["time is up", "timeExpired"],
+  ["tassello non valido", "invalidTile"],
+  ["invalid tile", "invalidTile"],
+  ["non puo muoversi", "tileCannotMove"],
+  ["non può muoversi", "tileCannotMove"],
+  ["cannot move", "tileCannotMove"],
+  ["non e ancora completata", "gameNotCompleted"],
+  ["non è ancora completata", "gameNotCompleted"],
+  ["not completed yet", "gameNotCompleted"],
+];
+
+export function translateServerError(message: string): string {
+  const normalized = message.toLocaleLowerCase();
+  const match = serverErrors.find(([fragment]) => normalized.includes(fragment));
+  return match ? t(match[1]) : t("unexpectedError");
+}

@@ -1,6 +1,7 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ActionResult, RoomState } from "@needs-two/shared";
+import { t, translateServerError } from "../i18n";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -30,11 +31,10 @@ interface AdvanceResult {
 function errorMessage(message: string): string {
   const clean = message.split(" CONTEXT:")[0]?.trim() || message;
   if (clean.includes("Failed to fetch") || clean.includes("NetworkError")) {
-    return "Connessione non disponibile. Riprova tra poco.";
+    return t("networkUnavailable");
   }
-  return clean;
+  return translateServerError(clean);
 }
-
 export function useGameSocket(sessionId: string) {
   const roomRef = useRef<RoomState | null>(null);
   const roomCodeRef = useRef(localStorage.getItem(ROOM_STORAGE_KEY));
@@ -54,7 +54,7 @@ export function useGameSocket(sessionId: string) {
 
   const callRpc = useCallback(async <T,>(name: RoomRpc, args: Record<string, unknown>): Promise<T> => {
     if (!supabase) {
-      throw new Error("Supabase non e configurato. Controlla le variabili VITE_SUPABASE_*.");
+      throw new Error(t("supabaseNotConfigured"));
     }
     const { data, error } = await supabase.rpc(name, args);
     if (error) throw new Error(errorMessage(error.message));
@@ -174,7 +174,7 @@ export function useGameSocket(sessionId: string) {
       applyState(state);
       return { ok: true, state };
     } catch (error) {
-      return { ok: false, message: error instanceof Error ? error.message : "Non riesco a creare la stanza." };
+      return { ok: false, message: error instanceof Error ? error.message : t("createRoomError") };
     }
   }, [applyState, callRpc, sessionId]);
 
@@ -187,13 +187,13 @@ export function useGameSocket(sessionId: string) {
       applyState(state);
       return { ok: true, state };
     } catch (error) {
-      return { ok: false, message: error instanceof Error ? error.message : "Non riesco a entrare nella stanza." };
+      return { ok: false, message: error instanceof Error ? error.message : t("joinRoomError") };
     }
   }, [applyState, callRpc, sessionId]);
 
   const moveTile = useCallback(async (tileId: number): Promise<ActionResult> => {
     const code = roomCodeRef.current;
-    if (!code) return { ok: false, message: "Stanza non disponibile." };
+    if (!code) return { ok: false, message: t("roomUnavailable") };
     try {
       const state = await callRpc<RoomState>("needs_two_move_tile", {
         p_code: code,
@@ -204,13 +204,13 @@ export function useGameSocket(sessionId: string) {
       await broadcastRefresh();
       return { ok: true, state };
     } catch (error) {
-      return { ok: false, message: error instanceof Error ? error.message : "La mossa non e riuscita." };
+      return { ok: false, message: error instanceof Error ? error.message : t("moveFailed") };
     }
   }, [applyState, broadcastRefresh, callRpc, sessionId]);
 
   const requestRematch = useCallback(async (): Promise<ActionResult> => {
     const code = roomCodeRef.current;
-    if (!code) return { ok: false, message: "Stanza non disponibile." };
+    if (!code) return { ok: false, message: t("roomUnavailable") };
     try {
       const state = await callRpc<RoomState>("needs_two_request_rematch", {
         p_code: code,
@@ -220,7 +220,7 @@ export function useGameSocket(sessionId: string) {
       await broadcastRefresh();
       return { ok: true, state };
     } catch (error) {
-      return { ok: false, message: error instanceof Error ? error.message : "Non riesco a riavviare la partita." };
+      return { ok: false, message: error instanceof Error ? error.message : t("rematchFailed") };
     }
   }, [applyState, broadcastRefresh, callRpc, sessionId]);
 

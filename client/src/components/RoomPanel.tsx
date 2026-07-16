@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { t } from "../i18n";
 
 interface RoomPanelProps {
   onBack: () => void;
@@ -21,7 +22,7 @@ export function RoomPanel({ onBack, onCreate, onJoin }: RoomPanelProps) {
 
   async function join(event: FormEvent) {
     event.preventDefault();
-    if (code.length !== 6) return setError("Il codice deve avere 6 caratteri.");
+    if (code.length !== 6) return setError(t("invalidCodeLength"));
     setBusy(true);
     setError((await onJoin(code)) ?? "");
     setBusy(false);
@@ -30,18 +31,18 @@ export function RoomPanel({ onBack, onCreate, onJoin }: RoomPanelProps) {
   return (
     <main className="center-screen">
       <section className="room-card enter-card" aria-labelledby="room-title">
-        <button className="icon-button back-button" onClick={mode === "join" ? () => setMode("choose") : onBack} aria-label="Indietro">
+        <button className="icon-button back-button" onClick={mode === "join" ? () => setMode("choose") : onBack} aria-label={t("back")}>
           <ArrowLeft aria-hidden="true" size={20} />
         </button>
-        <h2 id="room-title">Giochiamo insieme</h2>
+        <h2 id="room-title">{t("playTogether")}</h2>
         {mode === "choose" ? (
           <div className="room-actions">
-            <button className="button button-primary" onClick={create} disabled={busy}>Crea una stanza</button>
-            <button className="button button-secondary" onClick={() => setMode("join")}>Entra con un codice</button>
+            <button className="button button-primary" onClick={create} disabled={busy}>{t("createRoom")}</button>
+            <button className="button button-secondary" onClick={() => setMode("join")}>{t("joinWithCode")}</button>
           </div>
         ) : (
           <form onSubmit={join} className="join-form">
-            <label htmlFor="room-code">Codice amico</label>
+            <label htmlFor="room-code">{t("friendCode")}</label>
             <input
               id="room-code"
               value={code}
@@ -55,7 +56,7 @@ export function RoomPanel({ onBack, onCreate, onJoin }: RoomPanelProps) {
               aria-describedby={error ? "room-error" : undefined}
               autoFocus
             />
-            <button className="button button-primary" disabled={busy || code.length !== 6}>Entra</button>
+            <button className="button button-primary" disabled={busy || code.length !== 6}>{t("join")}</button>
           </form>
         )}
         {error && <p className="form-error" id="room-error" role="alert">{error}</p>}
@@ -63,4 +64,3 @@ export function RoomPanel({ onBack, onCreate, onJoin }: RoomPanelProps) {
     </main>
   );
 }
-

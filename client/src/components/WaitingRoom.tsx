@@ -1,5 +1,6 @@
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { t } from "../i18n";
 
 interface WaitingRoomProps {
   code: string;
@@ -20,22 +21,21 @@ export function WaitingRoom({ code, found, onLeave }: WaitingRoomProps) {
         {found ? (
           <div className="found-state">
             <span className="found-mark"><Check aria-hidden="true" /></span>
-            <h2>Giocatore trovato!</h2>
+            <h2>{t("playerFound")}</h2>
           </div>
         ) : (
           <>
-            <p className="eyebrow">Invia questo codice al tuo amico</p>
+            <p className="eyebrow">{t("sendCode")}</p>
             <strong className="room-code">{code}</strong>
             <button className="button button-secondary copy-button" onClick={copyCode}>
               {copied ? <Check size={18} /> : <Copy size={18} />}
-              {copied ? "Copiato" : "Copia codice"}
+              {copied ? t("copied") : t("copyCode")}
             </button>
-            <div className="waiting-status"><span aria-hidden="true" />In attesa del secondo giocatore...</div>
-            <button className="text-button" onClick={onLeave}>Torna alla home</button>
+            <div className="waiting-status"><span aria-hidden="true" />{t("waitingSecondPlayer")}</div>
+            <button className="text-button" onClick={onLeave}>{t("backHome")}</button>
           </>
         )}
       </section>
     </main>
   );
 }
-

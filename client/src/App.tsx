@@ -5,6 +5,7 @@ import { RoomPanel } from "./components/RoomPanel";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { WaitingRoom } from "./components/WaitingRoom";
 import { useGameSocket } from "./hooks/useGameSocket";
+import { language, t } from "./i18n";
 
 function getSessionId() {
   const existing = localStorage.getItem("needs-two-session");
@@ -27,6 +28,10 @@ export function App() {
   const game = useGameSocket(sessionId);
 
   useEffect(() => {
+    document.documentElement.lang = language;
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = nightMode ? "night" : "day";
     localStorage.setItem("needs-two-theme", nightMode ? "night" : "day");
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", nightMode ? "#171916" : "#fafaf8");
@@ -34,12 +39,12 @@ export function App() {
 
   async function createRoom() {
     const result = await game.createRoom();
-    return result.ok ? null : result.message ?? "Non riesco a creare la stanza.";
+    return result.ok ? null : result.message ?? t("createRoomError");
   }
 
   async function joinRoom(code: string) {
     const result = await game.joinRoom(code);
-    return result.ok ? null : result.message ?? "Non riesco a entrare nella stanza.";
+    return result.ok ? null : result.message ?? t("joinRoomError");
   }
 
   function goHome() {

@@ -5,6 +5,7 @@ import {
   type GameState,
   type PlayerNumber,
 } from "@needs-two/shared";
+import { t } from "../i18n";
 
 interface TurnHeaderProps {
   game: GameState;
@@ -48,11 +49,11 @@ export function TurnHeader({ game, playerNumber, serverOffset }: TurnHeaderProps
 
   return (
     <header className={`turn-header player-${game.activePlayer}`}>
-      <div className="game-clock" aria-label={`${gameText} rimasti nella partita`}>
-        <span>Tempo partita</span><strong className="game-timer">{gameText}</strong>
+      <div className="game-clock" aria-label={t("gameTimeRemaining", { time: gameText })}>
+        <span>{t("gameTime")}</span><strong className="game-timer">{gameText}</strong>
       </div>
-      <span key={`${game.activePlayer}-${game.phase}`} className="turn-label">{isMine ? "Il tuo turno" : "Turno del tuo amico"}</span>
-      <strong className="timer" aria-label={`${turnText} secondi rimasti nel turno`}>{turnText}</strong>
+      <span key={`${game.activePlayer}-${game.phase}`} className="turn-label">{isMine ? t("yourTurn") : t("friendTurn")}</span>
+      <strong className="timer" aria-label={t("turnSecondsRemaining", { time: turnText })}>{turnText}</strong>
       <div className="timer-track" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
     </header>
   );

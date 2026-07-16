@@ -97,9 +97,11 @@ needs-two/
 ```
 
 
-## Tema e audio
+## Tema, audio e lingua
 
-La modalità notturna è disponibile in tutte le schermate e viene ricordata nel browser. Durante la partita il controllo audio gestisce insieme gli effetti e la musica LoFi di sottofondo, riprodotta a volume molto basso. La versione web di 7 minuti è in `client/public/audio/lofi-background.mp3`; il file sorgente originale non viene incluso nel repository.
+La modalità notturna è disponibile in tutte le schermate e viene ricordata nel browser. Il controllo audio durante la partita attiva o disattiva soltanto gli effetti sonori di movimento, cambio turno e completamento; non è presente musica di sottofondo.
+
+L'interfaccia rileva automaticamente navigator.languages. Italiano e inglese sono completi, con fallback inglese per le altre lingue. Tutte le stringhe visibili, i messaggi di errore e le etichette accessibili sono centralizzati in client/src/i18n.ts, dove si possono aggiungere altre lingue senza modificare i componenti.
 ## Pubblicazione GitHub Pages
 
 Con le variabili Supabase presenti in `client/.env.local`:

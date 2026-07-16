@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+
 interface HomeScreenProps {
   onPlay: () => void;
 }
@@ -10,7 +12,7 @@ export function HomeScreen({ onPlay }: HomeScreenProps) {
       <div className="home-content">
         <h1 className="visually-hidden">Needs Two</h1>
         <img className="home-logo" src={logoUrl} alt="" aria-hidden="true" />
-        <button className="button button-primary play-button" onClick={onPlay}>Play</button>
+        <button className="button button-primary play-button" onClick={onPlay}>{t("play")}</button>
       </div>
     </main>
   );

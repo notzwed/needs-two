@@ -1,8 +1,33 @@
 import { expect, test } from "@playwright/test";
 
+test("uses the browser language for every screen", async ({ browser }) => {
+  const italianContext = await browser.newContext({ locale: "it-IT" });
+  const englishContext = await browser.newContext({ locale: "en-US" });
+  const italian = await italianContext.newPage();
+  const english = await englishContext.newPage();
+
+  await italian.goto("./");
+  await english.goto("./");
+
+  await expect(italian.locator("html")).toHaveAttribute("lang", "it");
+  await expect(english.locator("html")).toHaveAttribute("lang", "en");
+  await expect(italian.getByRole("button", { name: "Gioca" })).toBeVisible();
+  await expect(english.getByRole("button", { name: "Play" })).toBeVisible();
+
+  await italian.getByRole("button", { name: "Gioca" }).click();
+  await english.getByRole("button", { name: "Play" }).click();
+  await expect(italian.getByRole("heading", { name: "Giochiamo insieme" })).toBeVisible();
+  await expect(english.getByRole("heading", { name: "Let's play together" })).toBeVisible();
+  await expect(italian.getByRole("button", { name: "Crea una stanza" })).toBeVisible();
+  await expect(english.getByRole("button", { name: "Create a room" })).toBeVisible();
+
+  await italianContext.close();
+  await englishContext.close();
+});
+
 test("two browsers share an authoritative game and the layout stays responsive", async ({ browser }) => {
-  const firstContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  const secondContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const firstContext = await browser.newContext({ locale: "it-IT", viewport: { width: 1280, height: 900 } });
+  const secondContext = await browser.newContext({ locale: "it-IT", viewport: { width: 1280, height: 900 } });
   const first = await firstContext.newPage();
   const second = await secondContext.newPage();
 
@@ -28,17 +53,16 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.reload();
   await expect(first.locator("html")).toHaveAttribute("data-theme", "night");
   await first.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
-  await first.getByRole("button", { name: "Play" }).click();
+  await first.getByRole("button", { name: "Gioca" }).click();
   await first.getByRole("button", { name: "Crea una stanza" }).click();
   const code = (await first.locator(".room-code").textContent())!.trim();
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
 
   await second.goto("./");
-  await second.getByRole("button", { name: "Play" }).click();
+  await second.getByRole("button", { name: "Gioca" }).click();
   await second.getByRole("button", { name: "Entra con un codice" }).click();
   await second.getByLabel("Codice amico").fill(code.toLowerCase());
   await expect(second.getByLabel("Codice amico")).toHaveValue(code);
-  const musicRequest = first.waitForRequest((request) => request.url().includes("/audio/lofi-background.mp3"));
   await second.getByRole("button", { name: "Entra", exact: true }).click();
 
   await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 5_000 });
@@ -48,7 +72,6 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.locator(".reference-thumbnail img")).toHaveJSProperty("complete", true);
   const thumbnailBox = await referenceButton.boundingBox();
   await referenceButton.click();
-  await musicRequest;
   const referenceDialog = first.getByRole("dialog", { name: "Immagine di riferimento ingrandita" });
   await expect(referenceDialog).toBeVisible();
   await expect(referenceDialog.locator("img")).toBeVisible();
@@ -56,12 +79,10 @@ test("two browsers share an authoritative game and the layout stays responsive",
   expect(zoomedBox!.width).toBeGreaterThan(thumbnailBox!.width * 2);
   await first.keyboard.press("Escape");
   await expect(referenceDialog).toBeHidden();
-  const homeArtButton = first.getByRole("button", { name: "Torna alla home" });
+  const homeButton = first.getByRole("button", { name: "Torna alla home" });
   const audioButton = first.getByRole("button", { name: "Disattiva audio" });
-  await expect(homeArtButton.locator("img")).toHaveJSProperty("complete", true);
-  await expect(audioButton.locator("img")).toHaveJSProperty("complete", true);
-  expect(await homeArtButton.locator("img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
-  expect(await audioButton.locator("img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(homeButton.locator("svg")).toBeVisible();
+  await expect(audioButton.locator("svg")).toBeVisible();
   await audioButton.click();
   await expect(first.getByRole("button", { name: "Attiva audio" })).toBeVisible();
   await first.getByRole("button", { name: "Attiva audio" }).click();
@@ -90,8 +111,8 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.getByText("0 mosse")).toBeVisible();
 
   await first.getByRole("button", { name: "Sposta tassello" }).first().click();
-  await expect(first.getByText("1 mosse")).toBeVisible();
-  await expect(second.getByText("1 mosse")).toBeVisible();
+  await expect(first.getByText("1 mossa")).toBeVisible();
+  await expect(second.getByText("1 mossa")).toBeVisible();
   await expect(first.locator(".turn-label")).toHaveText("Turno del tuo amico", { timeout: 10_000 });
   await expect(second.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
@@ -102,7 +123,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   expect(hasHorizontalOverflow).toBe(false);
   await expect(second.locator(".puzzle-board")).toBeInViewport();
   const topbarOverlaps = await second.evaluate(() => {
-    const elements = [...document.querySelectorAll<HTMLElement>(".home-art-button, .mini-brand, .game-topbar-actions")]
+    const elements = [...document.querySelectorAll<HTMLElement>(".game-topbar > .icon-button, .mini-brand, .game-topbar-actions")]
       .filter((element) => getComputedStyle(element).display !== "none")
       .map((element) => element.getBoundingClientRect());
     return elements.some((box, index) => elements.slice(index + 1).some((other) =>
@@ -112,6 +133,10 @@ test("two browsers share an authoritative game and the layout stays responsive",
   expect(topbarOverlaps).toBe(false);
   await second.screenshot({ path: "artifacts/game-mobile.png", fullPage: true });
 
+  const requestedBackgroundMusic = await first.evaluate(() =>
+    performance.getEntriesByType("resource").some((entry) => entry.name.includes("lofi-background.mp3")),
+  );
+  expect(requestedBackgroundMusic).toBe(false);
   const firstTiles = await first.locator(".puzzle-tile").evaluateAll((tiles) =>
     tiles.map((tile) => ({ transform: getComputedStyle(tile).transform, background: getComputedStyle(tile).backgroundImage })),
   );

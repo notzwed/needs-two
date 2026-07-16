@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { areAdjacentClient } from "../puzzleLogic";
 import type { GameState } from "@needs-two/shared";
+import { t } from "../i18n";
 
 interface PuzzleBoardProps {
   game: GameState;
@@ -27,7 +28,7 @@ export function PuzzleBoard({ game, canMove, isWatching, onMove, onWait }: Puzzl
 
   return (
     <div className={`puzzle-shell ${game.phase === "transition" ? "changing-turn" : ""} ${isWatching ? "is-watching" : ""}`}>
-      <div key={game.puzzleId} className={`puzzle-board ${game.phase === "completed" ? "is-complete" : ""}`} aria-label="Puzzle scorrevole 4 per 4">
+      <div key={game.puzzleId} className={`puzzle-board ${game.phase === "completed" ? "is-complete" : ""}`} aria-label={t("slidingPuzzle")}>
         <div className="empty-space" style={{ "--col": game.emptyPosition % game.size, "--row": Math.floor(game.emptyPosition / game.size) } as React.CSSProperties} />
         {game.board.map((tile) => {
           const correctColumn = tile.correctPosition % game.size;
@@ -46,7 +47,7 @@ export function PuzzleBoard({ game, canMove, isWatching, onMove, onWait }: Puzzl
                 backgroundSize: `${game.size * 100}% ${game.size * 100}%`,
               } as React.CSSProperties}
               onClick={() => void chooseTile(tile.id)}
-              aria-label={isMovable ? "Sposta tassello" : "Tassello non spostabile"}
+              aria-label={isMovable ? t("moveTile") : t("tileNotMovable")}
               aria-disabled={canMove ? !isMovable || inputLocked : false}
             />
           );
@@ -54,7 +55,7 @@ export function PuzzleBoard({ game, canMove, isWatching, onMove, onWait }: Puzzl
         <div className="completion-image" style={{ backgroundImage: `url(${image})` }} aria-hidden="true" />
       </div>
       <div className="friend-turn-mask" aria-hidden={!isWatching}>
-        <span>Sta giocando il tuo amico</span>
+        <span>{t("friendPlaying")}</span>
       </div>
     </div>
   );
