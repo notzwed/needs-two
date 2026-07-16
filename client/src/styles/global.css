@@ -948,3 +948,106 @@ html[data-theme="night"] .voice-playback {
   background: #344238;
 }
 html[data-theme="night"] .voice-playback:hover { background: #3d4d40; }
+/* Incoming voice invitation */
+.voice-invite {
+  position: fixed;
+  z-index: 19;
+  left: 18px;
+  bottom: 18px;
+  width: min(330px, calc(100vw - 24px));
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dfe7dc;
+  border-radius: 14px;
+  color: #343a34;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(45, 54, 45, 0.14);
+  animation: voice-invite-in 320ms cubic-bezier(0.2, 0.86, 0.2, 1) both;
+}
+.voice-invite-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #4d6c51;
+  background: #e5efe4;
+  animation: quiet-pulse 2.2s ease-in-out infinite;
+}
+.voice-invite-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.voice-invite-copy strong {
+  font-size: 0.88rem;
+  line-height: 1.2;
+}
+.voice-invite-copy span {
+  color: #777d75;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+.voice-invite-accept {
+  grid-column: 1 / -1;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  color: #fff;
+  background: #58725c;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.voice-invite-accept:hover { background: #49614d; transform: translateY(-1px); }
+.voice-invite-accept:active { transform: scale(0.98); }
+.voice-invite-dismiss {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #777d75;
+  background: transparent;
+  cursor: pointer;
+}
+.voice-invite-dismiss:hover { color: #414640; background: #f0f2ed; }
+
+html[data-theme="night"] .voice-invite {
+  color: #ebeee7;
+  border-color: #465044;
+  background: #292e27;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.34);
+}
+html[data-theme="night"] .voice-invite-icon {
+  color: #c9ddc7;
+  background: #3a4b3c;
+}
+html[data-theme="night"] .voice-invite-copy span { color: #b1b8ae; }
+html[data-theme="night"] .voice-invite-accept { color: #172019; background: #a9c1a7; }
+html[data-theme="night"] .voice-invite-accept:hover { background: #b7ceb5; }
+html[data-theme="night"] .voice-invite-dismiss { color: #b8beb4; }
+html[data-theme="night"] .voice-invite-dismiss:hover { color: #eef0e9; background: #363d34; }
+
+@keyframes voice-invite-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  .voice-invite {
+    left: 10px;
+    bottom: 10px;
+    width: min(330px, calc(100vw - 20px));
+  }
+  .voice-invite.with-chat-open {
+    bottom: calc(min(68svh, 560px) + 16px);
+  }
+}

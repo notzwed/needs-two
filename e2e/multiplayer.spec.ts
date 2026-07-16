@@ -144,6 +144,11 @@ test("two browsers share an authoritative game and the layout stays responsive",
     expect(textOverlaps).toBe(false);
   }
 
+  await expect.poll(async () => {
+    const label = await first.locator(".turn-label").textContent();
+    const seconds = Number(await first.locator(".timer").textContent());
+    return label === "Il tuo turno" && seconds >= 3;
+  }, { timeout: 20_000 }).toBe(true);
   await second.getByRole("button", { name: "Sposta tassello" }).first().click();
   await expect(second.getByText("Aspetta il tuo turno")).toBeVisible();
   await expect(first.getByText("0 mosse")).toBeVisible();
@@ -171,10 +176,13 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.getByText("Va bene, continuo io")).toBeVisible();
   await expect(first.locator(".chat-badge")).toBeHidden();
 
-  await Promise.all([
-    first.getByRole("button", { name: "Attiva voce" }).click(),
-    second.getByRole("button", { name: "Attiva voce" }).click(),
-  ]);
+await first.getByRole("button", { name: "Attiva voce" }).click();
+  const voiceInvite = second.locator(".voice-invite");
+  await expect(voiceInvite).toBeVisible({ timeout: 5_000 });
+  await expect(voiceInvite).toContainText("Il tuo amico vuole parlare");
+  await expect(voiceInvite).toHaveCSS("animation-name", "voice-invite-in");
+  await voiceInvite.getByRole("button", { name: "Attiva voce" }).click();
+  await expect(voiceInvite).toBeHidden();
   await expect(first.getByText("Voce connessa")).toBeVisible({ timeout: 35_000 });
   await expect(second.getByText("Voce connessa")).toBeVisible({ timeout: 35_000 });
   for (const page of [first, second]) {

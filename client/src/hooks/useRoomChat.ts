@@ -84,6 +84,7 @@ export function useRoomChat({ roomCode, sessionId, playerNumber }: UseRoomChatOp
   const relaySamplesRef = useRef<number[]>([]);
   const relayPlaybackRef = useRef<AudioContext | null>(null);
   const relayNextPlaybackRef = useRef(0);
+  const inviteDismissedRef = useRef(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [channelReady, setChannelReady] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
@@ -92,6 +93,7 @@ export function useRoomChat({ roomCode, sessionId, playerNumber }: UseRoomChatOp
   const [voiceTransport, setVoiceTransport] = useState<"webrtc" | "supabase" | null>(null);
   const voiceTransportRef = useRef<"webrtc" | "supabase" | null>(null);
   const [relayPacketsReceived, setRelayPacketsReceived] = useState(0);
+  const [incomingVoiceInvite, setIncomingVoiceInvite] = useState(false);
 
   const broadcast = useCallback(async (event: string, payload: SignalPayload) => {
     const channel = channelRef.current;
@@ -289,6 +291,7 @@ export function useRoomChat({ roomCode, sessionId, playerNumber }: UseRoomChatOp
       .on("broadcast", { event: "voice-ready" }, ({ payload }) => {
         const signal = payload as SignalPayload;
         if (signal.from === sessionId) return;
+        if (!localStreamRef.current && !inviteDismissedRef.current) setIncomingVoiceInvite(true);
         const wasReady = remoteReadyRef.current;
         remoteReadyRef.current = true;
         if (localStreamRef.current && !wasReady) void broadcast("voice-ready", {});
@@ -361,6 +364,8 @@ export function useRoomChat({ roomCode, sessionId, playerNumber }: UseRoomChatOp
         const signal = payload as SignalPayload;
         if (signal.from === sessionId) return;
         remoteReadyRef.current = false;
+        inviteDismissedRef.current = false;
+        setIncomingVoiceInvite(false);
         stopRelayCapture();
         stopRelayPlayback();
         voiceTransportRef.current = null;
@@ -410,9 +415,11 @@ export function useRoomChat({ roomCode, sessionId, playerNumber }: UseRoomChatOp
     return true;
   }, [broadcast, channelReady, playerNumber, sessionId]);
 
-const startVoice = useCallback(async () => {
+  const startVoice = useCallback(async () => {
     if (!channelReady) return;
     setRelayPacketsReceived(0);
+    inviteDismissedRef.current = false;
+    setIncomingVoiceInvite(false);
     voiceTransportRef.current = null;
     setVoiceTransport(null);
     setVoiceStatus("requesting");
@@ -458,12 +465,18 @@ const startVoice = useCallback(async () => {
     for (const track of localStreamRef.current?.getTracks() ?? []) track.stop();
     localStreamRef.current = null;
     remoteReadyRef.current = false;
+    inviteDismissedRef.current = false;
+    setIncomingVoiceInvite(false);
     setMuted(false);
     voiceTransportRef.current = null;
     setVoiceTransport(null);
     setVoiceStatus("idle");
   }, [broadcast, closePeer, stopRelayCapture, stopRelayPlayback]);
 
+  const dismissVoiceInvite = useCallback(() => {
+    inviteDismissedRef.current = true;
+    setIncomingVoiceInvite(false);
+  }, []);
   const toggleMute = useCallback(() => {
     const next = !muted;
     for (const track of localStreamRef.current?.getAudioTracks() ?? []) track.enabled = !next;
@@ -478,6 +491,8 @@ const startVoice = useCallback(async () => {
     remoteStream,
     voiceTransport,
     relayPacketsReceived,
+    incomingVoiceInvite,
+    dismissVoiceInvite,
     sendMessage,
     startVoice,
     leaveVoice,

@@ -6,6 +6,7 @@ import { GameChat } from "./GameChat";
 import { PuzzleBoard } from "./PuzzleBoard";
 import { PuzzleReference } from "./PuzzleReference";
 import { TurnHeader } from "./TurnHeader";
+import { VoiceInvite } from "./VoiceInvite";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSound } from "../hooks/useSound";
 import { useRoomChat } from "../hooks/useRoomChat";
@@ -126,7 +127,16 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
           </section>
         </div>
       )}
-      <GameChat
+      {chat.incomingVoiceInvite && (
+        <VoiceInvite
+          chatOpen={chatOpen}
+          onAccept={() => {
+            setChatOpen(true);
+            void chat.startVoice();
+          }}
+          onDismiss={chat.dismissVoiceInvite}
+        />
+      )}      <GameChat
         open={chatOpen}
         playerNumber={playerNumber}
         messages={chat.messages}

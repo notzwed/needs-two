@@ -87,6 +87,10 @@ const italian = {
   voiceConnected: "Voce connessa",
   voiceError: "Microfono non disponibile",
   playVoiceAudio: "Ascolta audio",
+  voiceInviteTitle: "Il tuo amico vuole parlare",
+  voiceInviteText: "Ti sta invitando nella chat vocale.",
+  acceptVoiceInvite: "Attiva voce",
+  dismissVoiceInvite: "Ignora invito vocale",
 } as const;
 
 type TranslationKey = keyof typeof italian;
@@ -182,6 +186,10 @@ const english: Dictionary = {
   voiceConnected: "Voice connected",
   voiceError: "Microphone unavailable",
   playVoiceAudio: "Play audio",
+  voiceInviteTitle: "Your friend wants to talk",
+  voiceInviteText: "They are inviting you to voice chat.",
+  acceptVoiceInvite: "Start voice",
+  dismissVoiceInvite: "Dismiss voice invite",
 };
 
 const dictionaries: Record<Language, Dictionary> = { it: italian, en: english };
