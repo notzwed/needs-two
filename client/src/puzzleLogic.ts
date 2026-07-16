@@ -1,5 +1,5 @@
-export function areAdjacentClient(first: number, second: number, size: number): boolean {
-  return Math.abs(Math.floor(first / size) - Math.floor(second / size))
-    + Math.abs((first % size) - (second % size)) === 1;
-}
+import { arePuzzlePositionsAdjacent, type PuzzleLayout } from "@needs-two/shared";
 
+export function areAdjacentClient(first: number, second: number, layout: PuzzleLayout): boolean {
+  return arePuzzlePositionsAdjacent(first, second, layout);
+}

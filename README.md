@@ -64,24 +64,27 @@ npm run test:e2e
 
 I test server verificano anche centinaia di puzzle generati tramite sequenze di mosse valide. Il test Playwright apre due contesti browser e controlla stanza condivisa, blocco del giocatore non attivo, sincronizzazione della mossa, timer, maschera del turno e layout mobile.
 
-## Immagini puzzle
+## Immagini e layout puzzle
 
-Le 33 illustrazioni quadrate sono in `client/public/puzzles`. Per sostituirle, mantieni gli stessi nomi e preferibilmente il formato PNG quadrato.
+Le 73 illustrazioni locali sono in client/public/puzzles: 33 puzzle quadrati 4×4 originali e 40 nuovi WebP, divisi in 10 quadrati 8×8, 10 rettangolari, 10 pentagonali e 10 esagonali.
 
-Per aggiungere una nuova immagine:
+Il prefisso dell'ID determina automaticamente il layout:
 
-1. Inserisci il file in `client/public/puzzles`.
-2. Aggiungi il nome senza estensione a `PUZZLE_IDS` in `server/src/puzzle.ts`.
-3. Aggiungi lo stesso ID all'array della funzione `needs_two_puzzle_id` nella migration Supabase.
+- square8-: board quadrata 8×8, 64 celle.
+- rect-: board 3:2 con griglia 5×4 e tasselli rettangolari.
+- pent-: board e tasselli ritagliati a cinque lati, con griglia 4×4.
+- hex-: board esagonale composta da 19 esagoni realmente adiacenti.
+- Senza prefisso: board quadrata 4×4 originale.
 
-Il client suddivide automaticamente ogni immagine 4x4 tramite `background-position`.
+Il server e Supabase scelgono sempre casualmente l'immagine e il layout; non esiste un selettore client. Ogni configurazione viene mescolata partendo dalla soluzione e applicando soltanto mosse valide.
 
+Per aggiungere un'immagine, inserisci il file in client/public/puzzles, registra l'ID in PUZZLE_IDS e nella funzione needs_two_puzzle_id della migrazione Supabase.
 ## Struttura
 
 ```text
 needs-two/
 |-- client/
-|   |-- public/puzzles/       # 33 illustrazioni locali
+|   |-- public/puzzles/       # 73 illustrazioni locali
 |   `-- src/
 |       |-- components/       # schermate, board, timer e modali
 |       |-- hooks/            # Supabase Realtime e audio opzionale

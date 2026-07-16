@@ -1,16 +1,19 @@
 import { Maximize2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { t } from "../i18n";
+import type { PuzzleLayout } from "@needs-two/shared";
+import { puzzleImageUrl } from "../puzzleAssets";
 
 interface PuzzleReferenceProps {
   puzzleId: string;
+  layout: PuzzleLayout;
 }
 
-export function PuzzleReference({ puzzleId }: PuzzleReferenceProps) {
+export function PuzzleReference({ puzzleId, layout }: PuzzleReferenceProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const image = `${import.meta.env.BASE_URL}puzzles/${puzzleId}.png`;
+  const image = puzzleImageUrl(puzzleId);
 
   useEffect(() => {
     if (!open) return;
@@ -29,11 +32,11 @@ export function PuzzleReference({ puzzleId }: PuzzleReferenceProps) {
   }, [open]);
 
   return (
-    <aside className="puzzle-reference" aria-label={t("referenceImage")}>
+    <aside className={`puzzle-reference layout-${layout}`} aria-label={t("referenceImage")}>
       <span className="reference-label">{t("reference")}</span>
       <button
         ref={triggerRef}
-        className="reference-thumbnail"
+        className={`reference-thumbnail layout-${layout}`}
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t("enlargeReference")}
@@ -48,7 +51,7 @@ export function PuzzleReference({ puzzleId }: PuzzleReferenceProps) {
         <div className="reference-modal-backdrop" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setOpen(false);
         }}>
-          <section className="reference-modal" role="dialog" aria-modal="true" aria-label={t("enlargedReference")}>
+          <section className={`reference-modal layout-${layout}`} role="dialog" aria-modal="true" aria-label={t("enlargedReference")}>
             <img src={image} alt={t("enlargedPuzzleImage", { puzzle: puzzleId })} />
             <button
               ref={closeRef}

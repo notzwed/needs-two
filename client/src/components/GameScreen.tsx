@@ -82,7 +82,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
       <TurnHeader game={room.game} playerNumber={playerNumber} serverOffset={room.serverTime - Date.now()} />
       <div className="game-stage">
         <PuzzleBoard game={room.game} canMove={canMove} isWatching={isWatching} onMove={move} onWait={waitNotice} />
-        <PuzzleReference puzzleId={room.game.puzzleId} />
+        <PuzzleReference puzzleId={room.game.puzzleId} layout={room.game.layout} />
       </div>
       <div className="game-meta">
         <span>{t("youPlayer", { number: playerNumber })}</span>

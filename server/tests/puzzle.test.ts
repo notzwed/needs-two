@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_SIZE } from "@needs-two/shared";
+import { BOARD_SIZE, puzzleLayoutConfig, type PuzzleLayout } from "@needs-two/shared";
 import { areAdjacent, createShuffledPuzzle, isSolved, moveTile } from "../src/puzzle.js";
 
 function isSolvable(boardPositions: number[], emptyPosition: number): boolean {
@@ -29,10 +29,28 @@ describe("puzzle logic", () => {
     }
   });
 
+  it.each(["square8", "rectangle", "pentagon", "hexagon"] as PuzzleLayout[])(
+    "builds a solvable shuffled %s layout",
+    (layout) => {
+      const config = puzzleLayoutConfig(layout);
+      for (let sample = 0; sample < 30; sample += 1) {
+        const puzzle = createShuffledPuzzle(layout);
+        const positions = [...puzzle.board.map((tile) => tile.position), puzzle.emptyPosition];
+        expect(puzzle.board).toHaveLength(config.cellCount - 1);
+        expect(new Set(positions).size).toBe(config.cellCount);
+        expect(Math.min(...positions)).toBe(0);
+        expect(Math.max(...positions)).toBe(config.cellCount - 1);
+        expect(isSolved(puzzle.board)).toBe(false);
+      }
+    },
+  );
   it("moves only a tile adjacent to the empty space", () => {
     const puzzle = createShuffledPuzzle();
     const game = {
       size: BOARD_SIZE,
+      layout: "square4" as const,
+      rows: BOARD_SIZE,
+      columns: BOARD_SIZE,
       ...puzzle,
       activePlayer: 1 as const,
       phase: "playing" as const,

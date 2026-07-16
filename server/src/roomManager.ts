@@ -1,8 +1,9 @@
 import {
-  BOARD_SIZE,
   GAME_DURATION_MS,
   TURN_DURATION_MS,
   TURN_TRANSITION_MS,
+  puzzleLayoutConfig,
+  puzzleLayoutFromId,
   type GamePhase,
   type GameState,
   type Player,
@@ -245,9 +246,14 @@ export class RoomManager {
   private newGame(phase: GamePhase, previousPuzzle?: string): GameState {
     const choices = PUZZLE_IDS.filter((id) => id !== previousPuzzle);
     const puzzleId = choices[Math.floor(this.random() * choices.length)] ?? PUZZLE_IDS[0];
-    const shuffled = createShuffledPuzzle(BOARD_SIZE, this.random);
+    const layout = puzzleLayoutFromId(puzzleId);
+    const config = puzzleLayoutConfig(layout);
+    const shuffled = createShuffledPuzzle(layout, this.random);
     return {
-      size: BOARD_SIZE,
+      size: config.columns,
+      layout,
+      rows: config.rows,
+      columns: config.columns,
       ...shuffled,
       activePlayer: 1,
       phase,

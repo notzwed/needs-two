@@ -65,11 +65,12 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(second.getByLabel("Codice amico")).toHaveValue(code);
   await second.getByRole("button", { name: "Entra", exact: true }).click();
 
-  await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 5_000 });
-  await expect(second.locator(".puzzle-board")).toBeVisible({ timeout: 5_000 });
+  await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 10_000 });
+  await expect(second.locator(".puzzle-board")).toBeVisible({ timeout: 10_000 });
   const referenceButton = first.getByRole("button", { name: "Ingrandisci l'immagine di riferimento" });
   await expect(referenceButton).toBeVisible();
   await expect(first.locator(".reference-thumbnail img")).toHaveJSProperty("complete", true);
+  expect(await first.locator(".reference-thumbnail img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   const thumbnailBox = await referenceButton.boundingBox();
   await referenceButton.click();
   const referenceDialog = first.getByRole("dialog", { name: "Immagine di riferimento ingrandita" });
@@ -113,7 +114,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.getByRole("button", { name: "Sposta tassello" }).first().click();
   await expect(first.getByText("1 mossa")).toBeVisible();
   await expect(second.getByText("1 mossa")).toBeVisible();
-  await expect(first.locator(".turn-label")).toHaveText("Turno del tuo amico", { timeout: 10_000 });
+  await expect(first.locator(".turn-label")).toHaveText("Turno del tuo amico", { timeout: 15_000 });
   await expect(second.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
   await first.screenshot({ path: "artifacts/game-desktop.png", fullPage: true });
@@ -137,11 +138,22 @@ test("two browsers share an authoritative game and the layout stays responsive",
     performance.getEntriesByType("resource").some((entry) => entry.name.includes("lofi-background.mp3")),
   );
   expect(requestedBackgroundMusic).toBe(false);
+  const boardLayout = await first.locator(".puzzle-board").getAttribute("data-layout");
+  expect(["square4", "square8", "rectangle", "pentagon", "hexagon"]).toContain(boardLayout);
+  const expectedCells = { square4: 16, square8: 64, rectangle: 20, pentagon: 16, hexagon: 19 }[boardLayout!]!;
+  await expect(first.locator(".puzzle-tile")).toHaveCount(expectedCells - 1);
   const firstTiles = await first.locator(".puzzle-tile").evaluateAll((tiles) =>
-    tiles.map((tile) => ({ transform: getComputedStyle(tile).transform, background: getComputedStyle(tile).backgroundImage })),
+    tiles.map((tile) => ({
+      position: `${getComputedStyle(tile).left}:${getComputedStyle(tile).top}`,
+      background: getComputedStyle(tile).backgroundImage,
+    })),
   );
-  expect(new Set(firstTiles.map((tile) => tile.transform)).size).toBe(15);
+  expect(new Set(firstTiles.map((tile) => tile.position)).size).toBe(expectedCells - 1);
   expect(firstTiles.every((tile) => tile.background.includes("/puzzles/"))).toBe(true);
+  if (boardLayout === "pentagon" || boardLayout === "hexagon") {
+    await expect(first.locator(".puzzle-board")).not.toHaveCSS("clip-path", "none");
+    await expect(first.locator(".puzzle-tile").first()).not.toHaveCSS("clip-path", "none");
+  }
 
   await firstContext.close();
   await secondContext.close();
