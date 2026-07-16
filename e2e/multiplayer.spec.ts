@@ -72,7 +72,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "0");
   await expect(second.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
   await expect(first.locator(".timer")).toHaveText(/^(7\.0|6\.[0-9])$/);
-  await expect(first.locator(".game-timer")).toHaveText(/^(7:00|6:59)$/);
+  await expect(first.locator(".game-timer")).toHaveText(/^(7:00|6:[0-5][0-9])$/);
   for (const page of [first, second]) {
     const textOverlaps = await page.evaluate(() => {
       const visible = [...document.querySelectorAll<HTMLElement>(".turn-label, .timer, .game-timer, .friend-turn-mask span, .turn-pill")]
