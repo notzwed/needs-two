@@ -10,7 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/baloo-2": "^5.2.7",
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/fredoka": "^5.2.10",
+    "@fontsource/manrope": "^5.2.8",
     "@fontsource/nunito": "^5.2.7",
+    "@fontsource/quicksand": "^5.2.10",
     "@needs-two/shared": "*",
     "@supabase/supabase-js": "^2.110.6",
     "lucide-react": "^0.554.0",

@@ -11,11 +11,11 @@ test("uses the browser language for every screen", async ({ browser }) => {
 
   await expect(italian.locator("html")).toHaveAttribute("lang", "it");
   await expect(english.locator("html")).toHaveAttribute("lang", "en");
-  await expect(italian.getByRole("button", { name: "Gioca" })).toBeVisible();
-  await expect(english.getByRole("button", { name: "Play" })).toBeVisible();
+  await expect(italian.getByRole("button", { name: "Gioca con un amico" })).toBeVisible();
+  await expect(english.getByRole("button", { name: "Play with a friend" })).toBeVisible();
 
-  await italian.getByRole("button", { name: "Gioca" }).click();
-  await english.getByRole("button", { name: "Play" }).click();
+  await italian.getByRole("button", { name: "Gioca con un amico" }).click();
+  await english.getByRole("button", { name: "Play with a friend" }).click();
   await expect(italian.getByRole("heading", { name: "Giochiamo insieme" })).toBeVisible();
   await expect(english.getByRole("heading", { name: "Let's play together" })).toBeVisible();
   await expect(italian.getByRole("button", { name: "Crea una stanza" })).toBeVisible();
@@ -84,7 +84,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.reload();
   await expect(first.locator("html")).toHaveAttribute("data-theme", "night");
   await first.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
-  await first.getByRole("button", { name: "Gioca" }).click();
+  await first.getByRole("button", { name: "Gioca con un amico" }).click();
   await first.getByRole("button", { name: "Crea una stanza" }).click();
   const code = (await first.locator(".room-code").textContent())!.trim();
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
@@ -97,12 +97,13 @@ test("two browsers share an authoritative game and the layout stays responsive",
   expect(Number(await waitingMascots.locator(".mascot-player-2").evaluate((mascot) => getComputedStyle(mascot).opacity))).toBeLessThan(0.5);
 
   await second.goto("./");
-  await second.getByRole("button", { name: "Gioca" }).click();
+  await second.getByRole("button", { name: "Gioca con un amico" }).click();
   await second.getByRole("button", { name: "Entra con un codice" }).click();
   await second.getByLabel("Codice amico").fill(code.toLowerCase());
   await expect(second.getByLabel("Codice amico")).toHaveValue(code);
   await second.getByRole("button", { name: "Entra", exact: true }).click();
-  await expect(first.locator(".waiting-card .mascot-pair")).toHaveClass(/is-connected/, { timeout: 4_000 });
+  await expect(first.locator(".player-intro-screen")).toBeVisible({ timeout: 6_000 });
+  await expect(first.locator(".intro-player-card")).toHaveCount(2);
 
   await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 10_000 });
   await expect(second.locator(".puzzle-board")).toBeVisible({ timeout: 10_000 });

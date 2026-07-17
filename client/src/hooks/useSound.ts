@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-type SoundName = "move" | "turn" | "complete";
+type SoundName = "move" | "turn" | "complete" | "button" | "match" | "badge" | "rep" | "start";
 
 function playTone(context: AudioContext, frequency: number, start: number, duration: number, volume: number) {
   const oscillator = context.createOscillator();
@@ -90,6 +90,20 @@ export function useSound() {
     if (name === "turn") {
       playTone(context, 294, now, 0.18, 0.022);
       playTone(context, 392, now + 0.1, 0.24, 0.018);
+    }
+    if (name === "button") playTone(context, 240, now, 0.09, 0.012);
+    if (name === "match" || name === "start") {
+      playTone(context, 330, now, 0.18, 0.018);
+      playTone(context, 440, now + 0.09, 0.24, 0.016);
+    }
+    if (name === "rep") {
+      playTone(context, 420, now, 0.16, 0.014);
+      playTone(context, 520, now + 0.08, 0.22, 0.013);
+    }
+    if (name === "badge") {
+      playTone(context, 392, now, 0.2, 0.016);
+      playTone(context, 523, now + 0.1, 0.27, 0.015);
+      playTone(context, 659, now + 0.19, 0.32, 0.013);
     }
     if (name === "complete") {
       playTone(context, 330, now, 0.3, 0.024);

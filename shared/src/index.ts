@@ -133,3 +133,5 @@ export interface SocketEvents {
   clientToServer: ClientToServerEvents;
   serverToClient: ServerToClientEvents;
 }
+
+export * from './social.js';

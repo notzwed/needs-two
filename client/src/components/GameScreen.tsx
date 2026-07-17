@@ -1,6 +1,6 @@
 import { Home, MessageCircle, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { PlayerNumber, RoomState } from "@needs-two/shared";
+import type { PlayerNumber, ReputationAward, RoomState } from "@needs-two/shared";
 import { CompletionModal } from "./CompletionModal";
 import { GameChat } from "./GameChat";
 import { PuzzleBoard } from "./PuzzleBoard";
@@ -11,6 +11,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useSound } from "../hooks/useSound";
 import { useRoomChat } from "../hooks/useRoomChat";
 import { t } from "../i18n";
+import { supabase } from "../supabaseClient";
 
 interface GameScreenProps {
   room: RoomState;
@@ -21,9 +22,10 @@ interface GameScreenProps {
   onMove: (tileId: number) => Promise<{ ok: boolean; message?: string }>;
   onRematch: () => void;
   onHome: () => void;
+  onProfileRefresh: () => Promise<void>;
 }
 
-export function GameScreen({ room, sessionId, connected, nightMode, onToggleTheme, onMove, onRematch, onHome }: GameScreenProps) {
+export function GameScreen({ room, sessionId, connected, nightMode, onToggleTheme, onMove, onRematch, onHome, onProfileRefresh }: GameScreenProps) {
   const player = room.players.find((candidate) => candidate.id === sessionId);
   const playerNumber = (player?.number ?? 1) as PlayerNumber;
   const chat = useRoomChat({ roomCode: room.code, sessionId, playerNumber });
@@ -36,6 +38,8 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
   const disconnectedFriend = room.game.phase === "paused" || room.players.some((candidate) => !candidate.connected);
   const [notice, setNotice] = useState("");
   const [showCompletion, setShowCompletion] = useState(false);
+  const [reward, setReward] = useState<ReputationAward | null>(null);
+  const finalizedKey = useRef<string | null>(null);
   const { enabled, toggle, play } = useSound();
   const previousPhase = useRef(room.game.phase);
   const previousPlayer = useRef(room.game.activePlayer);
@@ -59,6 +63,30 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
     const timer = window.setTimeout(() => setShowCompletion(true), 780);
     return () => window.clearTimeout(timer);
   }, [room.game.phase]);
+
+  useEffect(() => {
+    if (room.game.phase !== "completed") {
+      setReward(null);
+      finalizedKey.current = null;
+      return;
+    }
+    const key = room.code + ":" + room.game.puzzleId + ":" + String(room.game.startedAt);
+    const client = supabase;
+    if (finalizedKey.current === key || !client) return;
+    finalizedKey.current = key;
+    void client.rpc("needs_two_finalize_room_match", {
+      p_code: room.code,
+      p_session_id: sessionId,
+    }).then(async () => {
+      const { data } = await client.rpc("needs_two_match_rewards", { p_code: room.code });
+      if (data) {
+        const nextReward = data as ReputationAward;
+        setReward(nextReward);
+        play(nextReward.breakdown.badgesUnlocked?.length ? "badge" : "rep");
+      }
+      await onProfileRefresh();
+    });
+  }, [onProfileRefresh, play, room.code, room.game.phase, room.game.puzzleId, room.game.startedAt, sessionId]);
 
   function waitNotice() {
     if (room.game.phase !== "playing" || room.game.activePlayer !== playerNumber) {
@@ -115,7 +143,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
       {disconnectedFriend && (
         <div className="modal-backdrop">
           <section className="disconnect-card" role="dialog" aria-modal="true">
-            <span className="pause-icon" aria-hidden="true">Ⅱ</span>
+            <span className="pause-icon" aria-hidden="true">Ã¢â€¦Â¡</span>
             <h2>{t("friendDisconnected")}</h2>
             <p>{t("pausedForThirty")}</p>
             <button className="button button-secondary" onClick={onHome}>{t("backHome")}</button>
@@ -155,6 +183,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
           completionReason={room.game.completionReason}
           onRematch={onRematch}
           onHome={onHome}
+          reward={reward}
         />
       )}
     </main>

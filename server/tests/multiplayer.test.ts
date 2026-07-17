@@ -93,7 +93,7 @@ describe("authoritative multiplayer server", () => {
     const secondTurn = await waitForState(first, (state) => state.game.phase === "playing" && state.game.activePlayer === 2);
     expect(secondTurn.game.turnEndsAt).not.toBeNull();
   });
-  it("keeps seven-second turns inside a seven-minute game", () => {
+  it("keeps ten-second turns inside a ten-minute game", () => {
     const rooms = new RoomManager({ transitionMs: 800 });
     const created = rooms.createRoom("one", "socket-one");
     const starting = rooms.joinRoom(created.code, "two", "socket-two");

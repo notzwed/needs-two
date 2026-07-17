@@ -1,7 +1,8 @@
 import { Clock3, Home, RotateCcw } from "lucide-react";
-import type { CompletionReason } from "@needs-two/shared";
+import type { CompletionReason, ReputationAward } from "@needs-two/shared";
 import { t } from "../i18n";
 import { MascotPair } from "./Mascot";
+import { RepGainSummary } from "./social/RepGainSummary";
 
 interface CompletionModalProps {
   elapsedMs: number;
@@ -10,6 +11,7 @@ interface CompletionModalProps {
   completionReason: CompletionReason;
   onRematch: () => void;
   onHome: () => void;
+  reward: ReputationAward | null;
 }
 
 function formatTime(milliseconds: number) {
@@ -19,7 +21,7 @@ function formatTime(milliseconds: number) {
   return minutes + ":" + seconds.toString().padStart(2, "0");
 }
 
-export function CompletionModal({ elapsedMs, moves, rematchReady, completionReason, onRematch, onHome }: CompletionModalProps) {
+export function CompletionModal({ elapsedMs, moves, rematchReady, completionReason, onRematch, onHome, reward }: CompletionModalProps) {
   const timedOut = completionReason === "timeout";
   const title = timedOut ? t("timeExpired") : t("puzzleCompleted");
 
@@ -36,6 +38,7 @@ export function CompletionModal({ elapsedMs, moves, rematchReady, completionReas
           <div><span>{t("time")}</span><strong>{formatTime(elapsedMs)}</strong></div>
           <div><span>{t("moves")}</span><strong>{moves}</strong></div>
         </div>
+        {reward && <RepGainSummary reward={reward} />}
         <button className="button button-primary" onClick={onRematch} disabled={rematchReady}>
           <RotateCcw size={18} />{rematchReady ? t("waitingFriend") : t("playAgain")}
         </button>
