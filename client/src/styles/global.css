@@ -1051,3 +1051,383 @@ html[data-theme="night"] .voice-invite-dismiss:hover { color: #eef0e9; backgroun
     bottom: calc(min(68svh, 560px) + 16px);
   }
 }
+/* 2026 interface refinement */
+:root { --coral-strong: #b87568; }
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 15px;
+  background: #fffefa;
+  box-shadow: 0 3px 9px rgba(43, 45, 40, 0.07);
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 180ms ease, transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.icon-button:hover {
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(43, 45, 40, 0.11);
+  transform: translateY(-2px);
+}
+.icon-button:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: 90ms;
+}
+.game-topbar { min-height: 48px; }
+.game-topbar-actions { gap: 9px; }
+
+/* Logo mascots reused as a lightweight sprite */
+.mascot {
+  position: relative;
+  width: 44px;
+  height: 50px;
+  display: inline-block;
+  flex: 0 0 44px;
+  overflow: hidden;
+  filter: drop-shadow(0 3px 4px rgba(47, 51, 47, 0.1));
+  transition: opacity 320ms ease, filter 320ms ease, transform 420ms cubic-bezier(0.2, 0.85, 0.2, 1);
+}
+.mascot img {
+  position: absolute;
+  top: 0;
+  width: 202px;
+  max-width: none;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+.mascot-player-1 img { left: -59px; }
+.mascot-player-2 img { left: -102px; }
+.mascot.is-muted {
+  opacity: 0.2;
+  filter: grayscale(0.65);
+  transform: translateX(9px) scale(0.93);
+}
+.mascot-pair {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 52px;
+}
+.mascot-pair .mascot + .mascot { margin-left: -3px; }
+.mascot-pair.is-connected .mascot-player-2 {
+  opacity: 1;
+  filter: drop-shadow(0 3px 4px rgba(47, 51, 47, 0.1));
+  transform: translateX(-3px);
+}
+.mascot-pair.is-celebrating {
+  margin-bottom: 3px;
+  animation: mascot-celebrate 620ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+
+.waiting-card > .mascot-pair { margin-bottom: 17px; }
+.waiting-card .found-state { margin-top: 2px; }
+.waiting-card .found-state .found-mark { display: none; }
+
+/* Countdown hierarchy and server-driven visual reset */
+.turn-header { width: min(100%, 380px); margin-bottom: 17px; }
+.turn-label {
+  min-height: 18px;
+  color: #656761;
+  font-size: 0.86rem;
+  line-height: 1.2;
+}
+.timer {
+  min-height: 49px;
+  margin: 1px 0 6px;
+  color: #30332f;
+  font-size: 2.9rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transform: scale(1);
+}
+.turn-header.is-urgent .timer {
+  color: #9b6f58;
+  transform: scale(1.04);
+}
+.timer-track {
+  height: 7px;
+  border-radius: 999px;
+}
+.timer-track span {
+  transform-origin: left center;
+  background: var(--sage-strong);
+  transition: width 70ms linear, background-color 220ms ease, transform 220ms ease, opacity 160ms ease;
+}
+.turn-header.is-local .timer-track span { background: var(--sage-strong); }
+.turn-header.is-friend .timer-track span { background: var(--coral-strong); }
+.timer-track.is-resetting span {
+  width: 100% !important;
+  animation: timer-refill 240ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+
+/* Rounded tiles and the turn/completion motion layer */
+.puzzle-board { --tile-radius: 11px; }
+.puzzle-tile,
+.empty-space { border-radius: var(--tile-radius); }
+.puzzle-board.layout-square8 { --tile-radius: 6px; }
+.puzzle-tile {
+  transition:
+    left 300ms cubic-bezier(0.16, 0.88, 0.24, 1),
+    top 300ms cubic-bezier(0.16, 0.88, 0.24, 1),
+    width 300ms ease,
+    height 300ms ease,
+    border-radius 520ms cubic-bezier(0.2, 0.82, 0.2, 1),
+    box-shadow 320ms ease;
+}
+.puzzle-shell.changing-turn .puzzle-board {
+  animation: board-turn-breathe 800ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+.puzzle-shell.is-completing {
+  pointer-events: none;
+}
+.puzzle-shell.is-completing .puzzle-board {
+  animation: complete-board 780ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+.puzzle-shell.is-completing::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -10px;
+  border-radius: 21px;
+  background: rgba(226, 196, 132, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  animation: completion-warmth 780ms ease both;
+}
+.puzzle-board.is-complete {
+  --gap: 0px;
+  --tile-radius: 0px;
+}
+.puzzle-board.is-complete .puzzle-tile,
+.puzzle-board.is-complete .empty-space {
+  border-radius: 0;
+  box-shadow: none;
+}
+.puzzle-board.is-complete .completion-image {
+  opacity: 1;
+  transition-delay: 300ms;
+}
+
+/* Turn announcement lives inside the board, avoiding header overlap */
+.turn-pill {
+  position: absolute;
+  z-index: 8;
+  top: 18px;
+  left: 50%;
+  min-height: 46px;
+  padding: 6px 16px 6px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 999px;
+  color: #405046;
+  background: rgba(232, 241, 232, 0.97);
+  box-shadow: 0 8px 22px rgba(42, 46, 40, 0.13);
+  font-size: 0.94rem;
+  white-space: nowrap;
+  animation: turn-pill-in 800ms cubic-bezier(0.2, 0.84, 0.2, 1) both;
+}
+.turn-pill.is-friend {
+  color: #6c4e47;
+  background: rgba(249, 232, 226, 0.97);
+}
+.turn-pill .mascot {
+  margin: -8px -5px -8px -7px;
+  transform: scale(0.68);
+}
+
+/* Watching stays readable while movements remain fully visible */
+.puzzle-shell.is-watching .puzzle-board {
+  filter: grayscale(0.25) saturate(0.78) brightness(0.97);
+  transform: scale(0.996);
+}
+.friend-turn-mask {
+  background: rgba(247, 246, 242, 0.16);
+}
+.friend-turn-card {
+  min-height: 48px;
+  padding: 7px 14px 7px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(80, 80, 74, 0.1);
+  border-radius: 999px;
+  color: #625953;
+  background: rgba(255, 254, 250, 0.92);
+  box-shadow: 0 5px 16px rgba(44, 45, 41, 0.1);
+  font-size: 0.88rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(5px) scale(0.98);
+  transition: opacity 240ms ease 90ms, transform 320ms cubic-bezier(0.2, 0.85, 0.2, 1) 90ms;
+}
+.friend-turn-card .mascot {
+  margin: -8px -7px -8px -8px;
+  transform: scale(0.66);
+}
+.puzzle-shell.is-watching .friend-turn-card {
+  opacity: 1;
+  transform: none;
+}
+.waiting-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 2px;
+}
+.waiting-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.28;
+  animation: waiting-dot 1.2s ease-in-out infinite;
+}
+.waiting-dots i:nth-child(2) { animation-delay: 140ms; }
+.waiting-dots i:nth-child(3) { animation-delay: 280ms; }
+
+/* Completion card enters only after the board has visually recomposed */
+.completion-backdrop {
+  animation: completion-backdrop-in 220ms ease both;
+}
+.completion-card {
+  animation: completion-card-in 300ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+.completion-card > .mascot-pair { margin-bottom: 5px; }
+.completion-card > .mascot-pair + h2 { margin-top: 5px; }
+
+@keyframes timer-refill {
+  0% { opacity: 0.25; transform: scaleX(0); }
+  40% { opacity: 0.65; }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+@keyframes board-turn-breathe {
+  0%, 100% { transform: scale(1); }
+  42% { transform: scale(0.985); }
+}
+@keyframes turn-pill-in {
+  0% { opacity: 0; transform: translate(-50%, -7px) scale(0.94); }
+  24%, 78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -3px) scale(0.98); }
+}
+@keyframes waiting-dot {
+  0%, 60%, 100% { opacity: 0.24; transform: translateY(0); }
+  30% { opacity: 0.82; transform: translateY(-2px); }
+}
+@keyframes complete-board {
+  0% { transform: scale(1); }
+  58% { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+@keyframes completion-warmth {
+  0%, 100% { opacity: 0; transform: scale(0.98); }
+  52% { opacity: 1; transform: scale(1.01); }
+}
+@keyframes completion-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes completion-card-in {
+  from { opacity: 0; transform: translateY(9px) scale(0.965); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mascot-celebrate {
+  0% { opacity: 0; transform: translateY(5px) scale(0.94); }
+  58% { opacity: 1; transform: translateY(-2px) scale(1.025); }
+  100% { opacity: 1; transform: none; }
+}
+
+html[data-theme="night"] .icon-button {
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.19);
+}
+html[data-theme="night"] .icon-button:hover {
+  background: #34382f;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.27);
+}
+html[data-theme="night"] .turn-header.is-urgent .timer { color: #dfb095; }
+html[data-theme="night"] .turn-header.is-friend .timer-track span { background: #c98e82; }
+html[data-theme="night"] .turn-pill.is-local {
+  color: #e2ece0;
+  background: rgba(52, 66, 56, 0.97);
+}
+html[data-theme="night"] .turn-pill.is-friend {
+  color: #f0ddd7;
+  background: rgba(75, 57, 52, 0.97);
+}
+html[data-theme="night"] .friend-turn-mask { background: rgba(20, 22, 19, 0.12); }
+html[data-theme="night"] .friend-turn-card {
+  color: #e3d8d3;
+  border-color: rgba(220, 224, 214, 0.1);
+  background: rgba(39, 43, 36, 0.92);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24);
+}
+html[data-theme="night"] .puzzle-shell.is-completing::after {
+  background: rgba(201, 166, 101, 0.13);
+}
+
+@media (max-width: 600px) {
+  .game-screen { padding-inline: 10px; }
+  .game-topbar { min-height: 48px; }
+  .game-topbar-actions { gap: 7px; }
+  .icon-button {
+    width: 43px;
+    height: 43px;
+    min-width: 43px;
+    min-height: 43px;
+    border-radius: 14px;
+  }
+  .turn-header { width: min(100%, 340px); margin-bottom: 13px; }
+  .turn-label { font-size: 0.8rem; }
+  .timer { min-height: 43px; font-size: 2.55rem; }
+  .puzzle-board { --tile-radius: 9px; }
+  .puzzle-board.layout-square8 { --tile-radius: 5px; }
+  .turn-pill { top: 12px; max-width: calc(100% - 24px); }
+  .friend-turn-card {
+    max-width: calc(100% - 20px);
+    font-size: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-shell.changing-turn .puzzle-board,
+  .puzzle-shell.is-completing .puzzle-board,
+  .puzzle-shell.is-completing::after,
+  .timer-track.is-resetting span,
+  .turn-pill,
+  .waiting-dots i,
+  .mascot-pair.is-celebrating {
+    animation: none !important;
+  }
+  .puzzle-board.is-complete .completion-image {
+    opacity: 1;
+    transition-delay: 0ms;
+  }
+}
+.friend-turn-card > span {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.home-screen,
+.center-screen,
+.game-screen {
+  background-image:
+    radial-gradient(circle at 18% 27%, rgba(76, 80, 74, 0.035) 0 0.6px, transparent 0.8px),
+    radial-gradient(circle at 73% 62%, rgba(76, 80, 74, 0.028) 0 0.5px, transparent 0.75px);
+  background-size: 53px 47px, 67px 61px;
+}
+html[data-theme="night"] .home-screen,
+html[data-theme="night"] .center-screen,
+html[data-theme="night"] .game-screen {
+  background-image:
+    radial-gradient(circle at 18% 27%, rgba(238, 240, 233, 0.026) 0 0.6px, transparent 0.8px),
+    radial-gradient(circle at 73% 62%, rgba(238, 240, 233, 0.022) 0 0.5px, transparent 0.75px);
+}

@@ -88,6 +88,10 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.getByRole("button", { name: "Crea una stanza" }).click();
   const code = (await first.locator(".room-code").textContent())!.trim();
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+  const waitingMascots = first.locator(".waiting-card .mascot-pair");
+  await expect(waitingMascots).toHaveClass(/is-waiting/);
+  await expect(waitingMascots.locator(".mascot")).toHaveCount(2);
+  expect(Number(await waitingMascots.locator(".mascot-player-2").evaluate((mascot) => getComputedStyle(mascot).opacity))).toBeLessThan(0.5);
 
   await second.goto("./");
   await second.getByRole("button", { name: "Gioca" }).click();
@@ -95,6 +99,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await second.getByLabel("Codice amico").fill(code.toLowerCase());
   await expect(second.getByLabel("Codice amico")).toHaveValue(code);
   await second.getByRole("button", { name: "Entra", exact: true }).click();
+  await expect(first.locator(".waiting-card .mascot-pair")).toHaveClass(/is-connected/, { timeout: 4_000 });
 
   await expect(first.locator(".puzzle-board")).toBeVisible({ timeout: 10_000 });
   await expect(second.locator(".puzzle-board")).toBeVisible({ timeout: 10_000 });
@@ -115,6 +120,12 @@ test("two browsers share an authoritative game and the layout stays responsive",
   const audioButton = first.getByRole("button", { name: "Disattiva audio" });
   await expect(homeButton.locator("svg")).toBeVisible();
   await expect(audioButton.locator("svg")).toBeVisible();
+  for (const control of [homeButton, first.getByRole("button", { name: "Apri chat" }), audioButton]) {
+    const box = await control.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(42);
+    expect(box!.height).toBeGreaterThanOrEqual(42);
+  }
+  await expect(first.locator(".game-screen")).toHaveCSS("background-image", /radial-gradient/);
   await audioButton.click();
   await expect(first.getByRole("button", { name: "Attiva audio" })).toBeVisible();
   await first.getByRole("button", { name: "Attiva audio" }).click();
@@ -130,11 +141,15 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "0");
   await expect(second.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
   await expect(first.locator(".timer")).toHaveText(/^[5-7]\.[0-9]$/);
+  await expect(first.locator(".timer")).toHaveCSS("font-variant-numeric", "tabular-nums");
+  expect(Number.parseFloat(await first.locator(".timer").evaluate((timer) => getComputedStyle(timer).fontSize))).toBeGreaterThanOrEqual(40);
+  const tileRadius = Number.parseFloat(await first.locator(".puzzle-tile").first().evaluate((tile) => getComputedStyle(tile).borderRadius));
+  expect(tileRadius).toBeGreaterThanOrEqual(5);
   await expect(first.locator(".game-timer")).toHaveText(/^(7:00|6:[0-5][0-9])$/);
   for (const page of [first, second]) {
     await expect(page.locator(".turn-pill")).toBeHidden({ timeout: 3_000 });
     const textOverlaps = await page.evaluate(() => {
-      const visible = [...document.querySelectorAll<HTMLElement>(".turn-label, .timer, .game-timer, .friend-turn-mask span, .turn-pill")]
+      const visible = [...document.querySelectorAll<HTMLElement>(".turn-label, .timer, .game-timer, .friend-turn-card > span:not(.mascot):not(.waiting-dots), .turn-pill")]
         .filter((element) => Number.parseFloat(getComputedStyle(element).opacity) > 0.1)
         .map((element) => element.getBoundingClientRect());
       return visible.some((box, index) => visible.slice(index + 1).some((other) =>
@@ -156,9 +171,19 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.getByRole("button", { name: "Sposta tassello" }).first().click();
   await expect(first.getByText("1 mossa")).toBeVisible();
   await expect(second.getByText("1 mossa")).toBeVisible();
+  await expect(first.locator(".turn-pill")).toBeVisible({ timeout: 10_000 });
+  await expect(first.locator(".turn-pill")).toContainText("Sta giocando il tuo amico");
+  await expect(second.locator(".turn-pill")).toContainText("Tocca a te!");
+  await expect(first.locator(".turn-pill")).toHaveCSS("animation-name", "turn-pill-in");
+  await expect(first.locator(".puzzle-board")).toHaveCSS("animation-name", "board-turn-breathe");
+  await expect(first.locator(".timer-track")).toHaveClass(/is-resetting/);
+  await expect(first.locator(".timer-track span")).toHaveCSS("animation-name", "timer-refill");
   await expect(first.locator(".turn-label")).toHaveText("Turno del tuo amico", { timeout: 15_000 });
   await expect(second.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
+  await expect(first.locator(".friend-turn-mask")).toHaveCSS("pointer-events", "none");
+  await expect(first.locator(".friend-turn-card")).toBeVisible();
+  await expect(first.locator(".waiting-dots i")).toHaveCount(3);
   await first.screenshot({ path: "artifacts/game-desktop.png", fullPage: true });
 
   await first.getByRole("button", { name: "Apri chat" }).click();
@@ -220,7 +245,33 @@ await first.getByRole("button", { name: "Attiva voce" }).click();
   });
   expect(topbarOverlaps).toBe(false);
   await second.screenshot({ path: "artifacts/game-mobile.png", fullPage: true });
+  await second.emulateMedia({ reducedMotion: "reduce" });
+  expect(await second.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+  await expect(second.locator(".puzzle-tile").first()).toHaveCSS("animation-duration", "0.001s");
 
+  const completionContract = await first.evaluate(() => {
+    const shell = document.querySelector<HTMLElement>(".puzzle-shell")!;
+    const board = document.querySelector<HTMLElement>(".puzzle-board")!;
+    const layout = { width: shell.offsetWidth, height: shell.offsetHeight };
+    shell.classList.add("is-completing");
+    board.classList.add("is-complete");
+    return {
+      animation: getComputedStyle(board).animationName,
+      pointerEvents: getComputedStyle(shell).pointerEvents,
+      layout,
+      currentLayout: { width: shell.offsetWidth, height: shell.offsetHeight },
+    };
+  });
+  expect(completionContract.animation).toBe("complete-board");
+  expect(completionContract.pointerEvents).toBe("none");
+  expect(completionContract.currentLayout).toEqual(completionContract.layout);
+  await first.waitForTimeout(800);
+  await expect(first.locator(".puzzle-tile").first()).toHaveCSS("border-radius", "0px");
+  await expect(first.locator(".completion-image")).toHaveCSS("opacity", "1");
+  await first.evaluate(() => {
+    document.querySelector(".puzzle-shell")?.classList.remove("is-completing");
+    document.querySelector(".puzzle-board")?.classList.remove("is-complete");
+  });
   const requestedBackgroundMusic = await first.evaluate(() =>
     performance.getEntriesByType("resource").some((entry) => entry.name.includes("lofi-background.mp3")),
   );

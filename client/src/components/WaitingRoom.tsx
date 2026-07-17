@@ -1,6 +1,7 @@
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { t } from "../i18n";
+import { MascotPair } from "./Mascot";
 
 interface WaitingRoomProps {
   code: string;
@@ -18,6 +19,7 @@ export function WaitingRoom({ code, found, onLeave }: WaitingRoomProps) {
   return (
     <main className="center-screen">
       <section className="room-card waiting-card" aria-live="polite">
+        <MascotPair connected={found} />
         {found ? (
           <div className="found-state">
             <span className="found-mark"><Check aria-hidden="true" /></span>

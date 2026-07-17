@@ -32,7 +32,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
   const remoteMessageCount = chat.messages.filter((message) => message.senderNumber !== playerNumber).length;
   const unreadMessages = Math.max(0, remoteMessageCount - seenRemoteMessages);
   const canMove = connected && room.game.phase === "playing" && room.game.activePlayer === playerNumber;
-  const isWatching = connected && ["playing", "transition"].includes(room.game.phase) && room.game.activePlayer !== playerNumber;
+  const isWatching = connected && room.game.phase === "playing" && room.game.activePlayer !== playerNumber;
   const disconnectedFriend = room.game.phase === "paused" || room.players.some((candidate) => !candidate.connected);
   const [notice, setNotice] = useState("");
   const [showCompletion, setShowCompletion] = useState(false);
@@ -56,7 +56,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
       setShowCompletion(false);
       return;
     }
-    const timer = window.setTimeout(() => setShowCompletion(true), 650);
+    const timer = window.setTimeout(() => setShowCompletion(true), 780);
     return () => window.clearTimeout(timer);
   }, [room.game.phase]);
 
@@ -103,7 +103,7 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
       </div>
       <TurnHeader game={room.game} playerNumber={playerNumber} serverOffset={room.serverTime - Date.now()} />
       <div className="game-stage">
-        <PuzzleBoard game={room.game} canMove={canMove} isWatching={isWatching} onMove={move} onWait={waitNotice} />
+        <PuzzleBoard game={room.game} canMove={canMove} isWatching={isWatching} playerNumber={playerNumber} onMove={move} onWait={waitNotice} />
         <PuzzleReference puzzleId={room.game.puzzleId} layout={room.game.layout} />
       </div>
       <div className="game-meta">
@@ -111,11 +111,6 @@ export function GameScreen({ room, sessionId, connected, nightMode, onToggleThem
         <span>{t(moveCountKey, { count: room.game.moveCount })}</span>
         <span>{t("roomMeta", { code: room.code })}</span>
       </div>
-      {room.game.phase === "transition" && room.game.activePlayer === playerNumber && (
-        <div className={`turn-pill player-${room.game.activePlayer}`} role="status">
-          {t("yourTurnPrompt")}
-        </div>
-      )}
       {notice && <div className="notice-pill" role="status">{notice}</div>}
       {disconnectedFriend && (
         <div className="modal-backdrop">

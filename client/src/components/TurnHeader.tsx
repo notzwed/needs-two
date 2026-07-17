@@ -17,7 +17,7 @@ function formatGameTimer(milliseconds: number) {
   const totalSeconds = Math.ceil(milliseconds / 1_000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  return minutes + ":" + seconds.toString().padStart(2, "0");
 }
 
 function formatTurnTimer(milliseconds: number) {
@@ -37,24 +37,30 @@ export function TurnHeader({ game, playerNumber, serverOffset }: TurnHeaderProps
   }, [serverOffset]);
 
   const isMine = game.activePlayer === playerNumber;
-  const turnRemaining = game.phase === "transition"
-    ? TURN_DURATION_MS
-    : game.turnEndsAt ? Math.max(0, game.turnEndsAt - now) : TURN_DURATION_MS;
+  const turnRemaining = game.phase === "completed"
+    ? 0
+    : game.phase === "transition"
+      ? TURN_DURATION_MS
+      : game.turnEndsAt ? Math.max(0, game.turnEndsAt - now) : TURN_DURATION_MS;
   const gameRemaining = game.gameEndsAt
     ? Math.min(GAME_DURATION_MS, Math.max(0, game.gameEndsAt - now))
     : Math.max(0, GAME_DURATION_MS - game.elapsedMs);
   const progress = Math.min(100, (turnRemaining / TURN_DURATION_MS) * 100);
   const turnText = formatTurnTimer(turnRemaining);
   const gameText = formatGameTimer(gameRemaining);
+  const urgent = turnRemaining < 2_000 && game.phase === "playing";
+  const headerClasses = "turn-header player-" + game.activePlayer + (isMine ? " is-local" : " is-friend") + (urgent ? " is-urgent" : "");
 
   return (
-    <header className={`turn-header player-${game.activePlayer}`}>
+    <header className={headerClasses}>
       <div className="game-clock" aria-label={t("gameTimeRemaining", { time: gameText })}>
         <span>{t("gameTime")}</span><strong className="game-timer">{gameText}</strong>
       </div>
-      <span key={`${game.activePlayer}-${game.phase}`} className="turn-label">{isMine ? t("yourTurn") : t("friendTurn")}</span>
+      <span key={game.activePlayer + "-" + game.phase} className="turn-label">{isMine ? t("yourTurn") : t("friendTurn")}</span>
       <strong className="timer" aria-label={t("turnSecondsRemaining", { time: turnText })}>{turnText}</strong>
-      <div className="timer-track" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+      <div className={"timer-track " + (game.phase === "transition" ? "is-resetting" : "")} aria-hidden="true">
+        <span key={game.activePlayer + "-" + game.phase} style={{ width: progress + "%" }} />
+      </div>
     </header>
   );
 }

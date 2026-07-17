@@ -1,6 +1,7 @@
-import { Check, Clock3, Home, RotateCcw } from "lucide-react";
+import { Clock3, Home, RotateCcw } from "lucide-react";
 import type { CompletionReason } from "@needs-two/shared";
 import { t } from "../i18n";
+import { MascotPair } from "./Mascot";
 
 interface CompletionModalProps {
   elapsedMs: number;
@@ -15,7 +16,7 @@ function formatTime(milliseconds: number) {
   const totalSeconds = Math.round(milliseconds / 1_000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  return minutes + ":" + seconds.toString().padStart(2, "0");
 }
 
 export function CompletionModal({ elapsedMs, moves, rematchReady, completionReason, onRematch, onHome }: CompletionModalProps) {
@@ -23,11 +24,13 @@ export function CompletionModal({ elapsedMs, moves, rematchReady, completionReas
   const title = timedOut ? t("timeExpired") : t("puzzleCompleted");
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-backdrop completion-backdrop">
       <section className="completion-card enter-card" role="dialog" aria-modal="true" aria-labelledby="complete-title">
-        <span className={`success-mark ${timedOut ? "is-timeout" : ""}`} aria-hidden="true">
-          {timedOut ? <Clock3 size={27} /> : <Check size={29} />}
-        </span>
+        {timedOut ? (
+          <span className="success-mark is-timeout" aria-hidden="true"><Clock3 size={27} /></span>
+        ) : (
+          <MascotPair celebrating />
+        )}
         <h2 id="complete-title">{title}</h2>
         <div className="result-stats">
           <div><span>{t("time")}</span><strong>{formatTime(elapsedMs)}</strong></div>
