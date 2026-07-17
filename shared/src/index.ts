@@ -1,6 +1,6 @@
 export const BOARD_SIZE = 4;
-export const TURN_DURATION_MS = 7_000;
-export const GAME_DURATION_MS = 7 * 60 * 1_000;
+export const TURN_DURATION_MS = 10_000;
+export const GAME_DURATION_MS = 10 * 60 * 1_000;
 export const TURN_TRANSITION_MS = 800;
 
 export type PuzzleLayout = "square4" | "square8" | "rectangle";

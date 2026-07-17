@@ -11,13 +11,16 @@ interface MascotPairProps {
   celebrating?: boolean;
 }
 
-const logoUrl = import.meta.env.BASE_URL + "branding/needs-two-logo.png";
+function mascotUrl(player: PlayerNumber) {
+  const filename = player === 1 ? "mascot-blue.png" : "mascot-red.png";
+  return import.meta.env.BASE_URL + "branding/" + filename;
+}
 
 export function Mascot({ player, muted = false, className = "" }: MascotProps) {
   const classes = "mascot mascot-player-" + player + (muted ? " is-muted" : "") + (className ? " " + className : "");
   return (
     <span className={classes} aria-hidden="true">
-      <img src={logoUrl} alt="" />
+      <img src={mascotUrl(player)} alt="" />
     </span>
   );
 }

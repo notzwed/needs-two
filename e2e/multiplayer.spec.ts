@@ -91,6 +91,9 @@ test("two browsers share an authoritative game and the layout stays responsive",
   const waitingMascots = first.locator(".waiting-card .mascot-pair");
   await expect(waitingMascots).toHaveClass(/is-waiting/);
   await expect(waitingMascots.locator(".mascot")).toHaveCount(2);
+  await expect(waitingMascots.locator(".mascot-player-1 img")).toHaveAttribute("src", /mascot-blue\.png/);
+  await expect(waitingMascots.locator(".mascot-player-2 img")).toHaveAttribute("src", /mascot-red\.png/);
+  expect(await waitingMascots.locator("img").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth === 220))).toBe(true);
   expect(Number(await waitingMascots.locator(".mascot-player-2").evaluate((mascot) => getComputedStyle(mascot).opacity))).toBeLessThan(0.5);
 
   await second.goto("./");
@@ -126,6 +129,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
     expect(box!.height).toBeGreaterThanOrEqual(42);
   }
   await expect(first.locator(".game-screen")).toHaveCSS("background-image", /radial-gradient/);
+  await expect(first.locator(".game-screen")).toHaveCSS("background-color", "rgb(23, 25, 22)");
   await audioButton.click();
   await expect(first.getByRole("button", { name: "Attiva audio" })).toBeVisible();
   await first.getByRole("button", { name: "Attiva audio" }).click();
@@ -133,19 +137,19 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect.poll(async () => {
     const label = await first.locator(".turn-label").textContent();
     const seconds = Number(await first.locator(".timer").textContent());
-    return label === "Il tuo turno" && seconds >= 5;
+    return label === "Il tuo turno" && seconds >= 8;
   }, { timeout: 20_000 }).toBe(true);
   await expect(first.locator(".turn-pill")).toBeHidden();
   await expect(first.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(second.locator(".turn-label")).toHaveText("Turno del tuo amico");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "0");
   await expect(second.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
-  await expect(first.locator(".timer")).toHaveText(/^[5-7]\.[0-9]$/);
+  await expect(first.locator(".timer")).toHaveText(/^(10|[0-9])\.[0-9]$/);
   await expect(first.locator(".timer")).toHaveCSS("font-variant-numeric", "tabular-nums");
   expect(Number.parseFloat(await first.locator(".timer").evaluate((timer) => getComputedStyle(timer).fontSize))).toBeGreaterThanOrEqual(40);
   const tileRadius = Number.parseFloat(await first.locator(".puzzle-tile").first().evaluate((tile) => getComputedStyle(tile).borderRadius));
   expect(tileRadius).toBeGreaterThanOrEqual(5);
-  await expect(first.locator(".game-timer")).toHaveText(/^(7:00|6:[0-5][0-9])$/);
+  await expect(first.locator(".game-timer")).toHaveText(/^(10:00|9:[0-5][0-9])$/);
   for (const page of [first, second]) {
     await expect(page.locator(".turn-pill")).toBeHidden({ timeout: 3_000 });
     const textOverlaps = await page.evaluate(() => {
@@ -162,7 +166,7 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await expect.poll(async () => {
     const label = await first.locator(".turn-label").textContent();
     const seconds = Number(await first.locator(".timer").textContent());
-    return label === "Il tuo turno" && seconds >= 3;
+    return label === "Il tuo turno" && seconds >= 6;
   }, { timeout: 20_000 }).toBe(true);
   await second.getByRole("button", { name: "Sposta tassello" }).first().click();
   await expect(second.getByText("Aspetta il tuo turno")).toBeVisible();
@@ -171,13 +175,14 @@ test("two browsers share an authoritative game and the layout stays responsive",
   await first.getByRole("button", { name: "Sposta tassello" }).first().click();
   await expect(first.getByText("1 mossa")).toBeVisible();
   await expect(second.getByText("1 mossa")).toBeVisible();
-  await expect(first.locator(".turn-pill")).toBeVisible({ timeout: 10_000 });
+  await expect(first.locator(".turn-pill")).toBeVisible({ timeout: 13_000 });
   await expect(first.locator(".turn-pill")).toContainText("Sta giocando il tuo amico");
   await expect(second.locator(".turn-pill")).toContainText("Tocca a te!");
   await expect(first.locator(".turn-pill")).toHaveCSS("animation-name", "turn-pill-in");
   await expect(first.locator(".puzzle-board")).toHaveCSS("animation-name", "board-turn-breathe");
   await expect(first.locator(".timer-track")).toHaveClass(/is-resetting/);
   await expect(first.locator(".timer-track span")).toHaveCSS("animation-name", "timer-refill");
+  await expect(first.locator(".timer")).toHaveText("10.0");
   await expect(first.locator(".turn-label")).toHaveText("Turno del tuo amico", { timeout: 15_000 });
   await expect(second.locator(".turn-label")).toHaveText("Il tuo turno");
   await expect(first.locator(".friend-turn-mask")).toHaveCSS("opacity", "1");
@@ -223,6 +228,12 @@ await first.getByRole("button", { name: "Attiva voce" }).click();
   await expect(second.getByText("In attesa del tuo amico")).toBeVisible({ timeout: 5_000 });
   await first.getByTestId("game-chat").getByRole("button", { name: "Chiudi chat" }).click();
   await second.getByTestId("game-chat").getByRole("button", { name: "Chiudi chat" }).click();
+  await second.setViewportSize({ width: 820, height: 1180 });
+  expect(await second.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await expect(second.locator(".game-stage")).toHaveCSS("display", "grid");
+  await expect(second.locator(".puzzle-board")).toBeInViewport();
+  await expect(second.getByRole("button", { name: "Ingrandisci l'immagine di riferimento" })).toBeInViewport();
+  await second.screenshot({ path: "artifacts/game-tablet.png", fullPage: true });
   await second.setViewportSize({ width: 390, height: 844 });
   const hasHorizontalOverflow = await second.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
@@ -245,6 +256,28 @@ await first.getByRole("button", { name: "Attiva voce" }).click();
   });
   expect(topbarOverlaps).toBe(false);
   await second.screenshot({ path: "artifacts/game-mobile.png", fullPage: true });
+  await second.setViewportSize({ width: 360, height: 780 });
+  expect(await second.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await expect(second.locator(".puzzle-board")).toBeInViewport();
+  await second.screenshot({ path: "artifacts/game-phone-small.png", fullPage: true });
+
+  await second.setViewportSize({ width: 844, height: 390 });
+  expect(await second.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await expect(second.locator(".puzzle-board")).toBeInViewport();
+  await expect(second.locator(".turn-header")).toBeInViewport();
+  await expect(second.locator(".mini-brand")).toBeHidden();
+  const landscapeControlsOverlap = await second.evaluate(() => {
+    const actions = document.querySelector<HTMLElement>(".game-topbar-actions")!.getBoundingClientRect();
+    const reference = document.querySelector<HTMLElement>(".puzzle-reference")!.getBoundingClientRect();
+    const turnPill = document.querySelector<HTMLElement>(".turn-pill");
+    const overlaps = (first: DOMRect, second: DOMRect) =>
+      first.left < second.right && first.right > second.left
+      && first.top < second.bottom && first.bottom > second.top;
+    return overlaps(actions, reference)
+      || (turnPill !== null && getComputedStyle(turnPill).display !== "none" && overlaps(actions, turnPill.getBoundingClientRect()));
+  });
+  expect(landscapeControlsOverlap).toBe(false);
+  await second.screenshot({ path: "artifacts/game-phone-landscape.png", fullPage: true });
   await second.emulateMedia({ reducedMotion: "reduce" });
   expect(await second.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
   await expect(second.locator(".puzzle-tile").first()).toHaveCSS("animation-duration", "0.001s");
